@@ -113,7 +113,12 @@ class Gated(torch.nn.Module):
 class GateWrapper(torch.nn.Module):
     """Applies a linear transformation before and after the gate."""
 
-    def __init__(self, irreps_in: e3nn.o3.Irreps, irreps_out: e3nn.o3.Irreps, irreps_gate: e3nn.o3.Irreps):
+    def __init__(
+        self,
+        irreps_in: e3nn.o3.Irreps,
+        irreps_out: e3nn.o3.Irreps,
+        irreps_gate: e3nn.o3.Irreps,
+    ):
         """Applies a linear transformation before and after the gate."""
         super().__init__()
         self.irreps_in = e3nn.o3.Irreps(irreps_in)

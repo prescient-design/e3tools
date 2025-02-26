@@ -206,7 +206,9 @@ class MultiheadAttention(torch.nn.Module):
             edge_attr_dim=edge_attr_dim,
         )
 
-        self.dot = o3.FullyConnectedTensorProduct(irreps_query_per_head, irreps_key_per_head, "0e")
+        self.dot = o3.FullyConnectedTensorProduct(
+            irreps_query_per_head, irreps_key_per_head, "0e"
+        )
 
         self.lin_out = o3.Linear(irreps_out_split, irreps_out)
 
@@ -335,7 +337,9 @@ class TransformerBlock(torch.nn.Module):
         self.attn = LinearSelfInteraction(attn)
         self.norm1 = LayerNorm(self.attn.irreps_out)
 
-        ff = EquivariantMLP(irreps_out, irreps_out, irreps_ff_hidden_list, norm_layer=None)
+        ff = EquivariantMLP(
+            irreps_out, irreps_out, irreps_ff_hidden_list, norm_layer=None
+        )
         self.ff = LinearSelfInteraction(ff)
 
         self.norm2 = LayerNorm(self.ff.irreps_out)

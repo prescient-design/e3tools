@@ -4,15 +4,17 @@ import e3nn.o3
 import torch
 
 
-def unpack_irreps(x: torch.Tensor, irreps: e3nn.o3.Irreps) -> Iterator[Tuple[int, e3nn.o3.Irrep, torch.Tensor]]:
+def unpack_irreps(
+    x: torch.Tensor, irreps: e3nn.o3.Irreps
+) -> Iterator[Tuple[int, e3nn.o3.Irrep, torch.Tensor]]:
     """
     Given a packed irreps vector of dimension [..., irreps.dim]
     yield tuples (mul, ir, field) where field has dimension [..., mul, 2*l+1]
     for each irrep in irreps
     """
-    assert (
-        x.shape[-1] == irreps.dim
-    ), f"last dimension of x (shape {x.shape}) does not match irreps.dim ({irreps} with dim {irreps.dim})"
+    assert x.shape[-1] == irreps.dim, (
+        f"last dimension of x (shape {x.shape}) does not match irreps.dim ({irreps} with dim {irreps.dim})"
+    )
     ix = 0
     for mul, ir in irreps:
         field = x.narrow(-1, ix, mul * ir.dim).reshape(*x.shape[:-1], mul, ir.dim)
@@ -28,7 +30,9 @@ def factor_tuples(
     """Factor the fields in each tuple by a factor."""
     for mul, ir, field in unpacked_tuples:
         if mul % factor != 0:
-            raise ValueError(f"irrep multiplicity {mul} is not divisible by factor {factor}")
+            raise ValueError(
+                f"irrep multiplicity {mul} is not divisible by factor {factor}"
+            )
         new_mul = mul // factor
         new_field = field.reshape(*field.shape[:-2], factor, mul // factor, ir.dim)
         yield new_mul, ir, new_field
@@ -44,7 +48,9 @@ def undo_factor_tuples(
         yield new_mul, ir, new_field
 
 
-def pack_irreps(unpacked_tuples: Iterator[Tuple[int, e3nn.o3.Irrep, torch.Tensor]]) -> torch.Tensor:
+def pack_irreps(
+    unpacked_tuples: Iterator[Tuple[int, e3nn.o3.Irrep, torch.Tensor]],
+) -> torch.Tensor:
     """Pack fields into a single tensor."""
     fields = []
     for mul, ir, field in unpacked_tuples:
@@ -52,7 +58,9 @@ def pack_irreps(unpacked_tuples: Iterator[Tuple[int, e3nn.o3.Irrep, torch.Tensor
     return torch.cat(fields, dim=-1)
 
 
-def mul_to_axis(x: torch.Tensor, irreps: e3nn.o3.Irreps, *, factor: int) -> Tuple[torch.Tensor, e3nn.o3.Irreps]:
+def mul_to_axis(
+    x: torch.Tensor, irreps: e3nn.o3.Irreps, *, factor: int
+) -> Tuple[torch.Tensor, e3nn.o3.Irreps]:
     """Adds a new axis by factoring out irreps.
 
     If x has shape [..., irreps.dim], the output will have shape [..., factor, irreps.dim // factor].
@@ -62,13 +70,17 @@ def mul_to_axis(x: torch.Tensor, irreps: e3nn.o3.Irreps, *, factor: int) -> Tupl
     return x_factored, irreps_factored
 
 
-def axis_to_mul(x: torch.Tensor, irreps: e3nn.o3.Irreps) -> Tuple[torch.Tensor, e3nn.o3.Irreps]:
+def axis_to_mul(
+    x: torch.Tensor, irreps: e3nn.o3.Irreps
+) -> Tuple[torch.Tensor, e3nn.o3.Irreps]:
     """Collapses the second-last axis by flattening the irreps.
 
     If x has shape [..., factor, irreps.dim // factor], the output will have shape [..., irreps.dim].
     """
     factor = x.shape[-2]
-    x_multiplied = pack_irreps(undo_factor_tuples(unpack_irreps(x, irreps), factor=factor))
+    x_multiplied = pack_irreps(
+        undo_factor_tuples(unpack_irreps(x, irreps), factor=factor)
+    )
     irreps_multiplied = e3nn.o3.Irreps([(mul * factor, ir) for mul, ir in irreps])
     return x_multiplied, irreps_multiplied
 
