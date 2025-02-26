@@ -4,7 +4,8 @@ from typing import Callable, Mapping, Optional, Union
 import e3nn
 import torch
 from e3nn import o3
-from torch_scatter import scatter
+
+from e3tools import scatter
 
 from ._gate import Gated
 from ._interaction import LinearSelfInteraction
