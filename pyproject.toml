@@ -1,0 +1,17 @@
+[project]
+name = "e3tools"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Joseph Kleinhenz", email = "kleinhej@gene.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "e3nn>=0.5.5",
+    "torch>=2.4.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
