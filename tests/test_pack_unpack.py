@@ -26,7 +26,6 @@ def test_axis_to_mul_equivariance(irreps_in: str, factor: int, batch_size: int =
     )
 
 
-
 @pytest.mark.parametrize(
     "irreps_in, factor",
     zip(
