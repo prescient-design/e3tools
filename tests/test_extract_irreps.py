@@ -8,7 +8,7 @@ from e3tools.nn import ExtractIrreps
 
 
 @pytest.mark.parametrize("irreps_in", ["0e + 1o + 2e", "2x0e + 1o + 2x2e + 1x1o"])
-def test_equivariance(irreps_in):
+def test_equivariance(irreps_in: str):
     irreps_in = e3nn.o3.Irreps(irreps_in)
     layer = ExtractIrreps(irreps_in, "0e")
     e3nn.util.test.assert_equivariant(
