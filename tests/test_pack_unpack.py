@@ -6,7 +6,6 @@ import torch
 from e3tools.nn import AxisToMul, MulToAxis
 
 
-
 @pytest.mark.parametrize(
     "irreps_in, factor",
     zip(
@@ -43,7 +42,6 @@ def test_mul_to_axis_shape(irreps_in: str, factor: int, batch_size: int = 5):
     assert output.shape == (batch_size, factor, irreps_in.dim // factor)
 
 
-
 @pytest.mark.parametrize(
     "irreps_in, factor",
     zip(
@@ -55,7 +53,7 @@ def test_inverse(irreps_in: str, factor: int, batch_size: int = 5):
     irreps_in = e3nn.o3.Irreps(irreps_in)
     layer = MulToAxis(irreps_in, factor)
     inv_layer = AxisToMul(layer.irreps_out, factor)
-    
+
     assert layer.irreps_in == irreps_in
     assert inv_layer.irreps_out == irreps_in
 
