@@ -13,7 +13,7 @@ def radius(
     r: float,
     batch_x: Int64[Tensor, " N"] | None = None,
     batch_y: Int64[Tensor, " M"] | None = None,
-    ignore_same_index: bool = True,
+    ignore_same_index: bool = False,
     chunk_size: int | None = None,
 ) -> Int64[Tensor, "2 E"]:
     """For each element in `y` find all points in `x` within distance `r`"""
@@ -79,5 +79,8 @@ def radius_graph(
     r: float,
     batch: Int64[Tensor, " N"] | None = None,
     chunk_size: int | None = None,
+    loop: bool = False,
 ) -> Int64[Tensor, "2 E"]:
-    return radius(x, x, r, batch, batch, ignore_same_index=True, chunk_size=chunk_size)
+    return radius(
+        x, x, r, batch, batch, ignore_same_index=not loop, chunk_size=chunk_size
+    )
