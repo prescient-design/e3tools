@@ -6,7 +6,7 @@ from e3tools import radius
 def test_radius():
     N = 500
     M = 100
-    device = torch.device("cuda")
+    device = None
     x = torch.randn(N, 3, device=device)
     y = torch.randn(M, 3, device=device)
     batch_x = torch.randint(2, (N,), device=device).sort().values
@@ -43,7 +43,7 @@ def test_radius():
 def test_radius_chunked():
     N = 500
     M = 100
-    device = torch.device("cuda")
+    device = None
     x = torch.randn(N, 3, device=device)
     y = torch.randn(M, 3, device=device)
     batch_x = torch.randint(2, (N,), device=device).sort().values
