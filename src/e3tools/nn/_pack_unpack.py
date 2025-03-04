@@ -95,6 +95,15 @@ class MulToAxis(torch.nn.Module):
         self.factor = factor
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Adds a new axis by factoring out irreps.
+
+        Parameters:
+            x: torch.Tensor of shape [..., irreps.dim]
+        
+        Returns:
+            torch.Tensor of shape [..., factor, irreps.dim // factor]
+        """
+
         return mul_to_axis(x, self.irreps_in, factor=self.factor)[0]
 
 
@@ -108,4 +117,12 @@ class AxisToMul(torch.nn.Module):
         self.factor = factor
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Collapses the second-last axis by flattening the irreps.
+
+        Parameters:
+            x: torch.Tensor of shape [..., factor, irreps.dim // factor]
+        
+        Returns:
+            torch.Tensor of shape [..., irreps.dim]
+        """
         return axis_to_mul(x, self.irreps_in)[0]

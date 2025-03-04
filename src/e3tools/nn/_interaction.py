@@ -23,7 +23,8 @@ class LinearSelfInteraction(torch.nn.Module):
         self.skip_connection = o3.Linear(self.irreps_in, self.irreps_out)
         self.self_interaction = o3.Linear(self.irreps_out, self.irreps_out)
 
-    def forward(self, x, *args):
+    def forward(self, x: torch.Tensor, *args) -> torch.Tensor:
+        """Combines the input layer with a skip connection."""
         s = self.skip_connection(x)
         x = self.f(x, *args)
         x = self.self_interaction(x)

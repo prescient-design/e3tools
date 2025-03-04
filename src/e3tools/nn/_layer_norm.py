@@ -8,7 +8,7 @@ from ._pack_unpack import unpack_irreps
 
 class LayerNorm(torch.nn.Module):
     """
-    Equivariant layer norm
+    Equivariant layer normalization.
 
     ref: https://github.com/atomicarchitects/equiformer/blob/master/nets/fast_layer_norm.py
     """
@@ -27,7 +27,11 @@ class LayerNorm(torch.nn.Module):
         self.irreps_out = o3.Irreps(irreps)
         self.eps = eps
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply layer normalization to input tensor.
+        Each irrep is normalized independently.
+        """
         # x: [..., self.irreps.dim]
         fields = []
         for mul, ir, field in unpack_irreps(x, self.irreps_in):

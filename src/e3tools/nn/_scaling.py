@@ -16,4 +16,13 @@ class ScaleIrreps(torch.nn.Module):
         )
 
     def forward(self, data: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
+        """Scales each irrep by a weight.
+
+        Parameters:
+            data: torch.Tensor of shape [..., irreps_in.dim]
+            weights: torch.Tensor of shape [..., irreps_in.num_irreps]
+        
+        Returns:
+            torch.Tensor of shape [..., irreps_in.dim]
+        """
         return self.tp(data, weights)

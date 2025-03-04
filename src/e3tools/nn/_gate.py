@@ -60,7 +60,8 @@ class Gate(torch.nn.Module):
 
         self.irreps_in = self.gate.irreps_in
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply the gate to the input tensor."""
         return self.gate(x)
 
 
@@ -105,6 +106,7 @@ class Gated(torch.nn.Module):
         self.irreps_sh = self.f.irreps_sh
 
     def forward(self, *args, **kwargs):
+        """Apply the layer and then the gate to the input tensor."""
         out = self.f(*args, **kwargs)
         out = self.gate(out)
         return out
@@ -130,6 +132,7 @@ class GateWrapper(torch.nn.Module):
         self.post_gate = e3nn.o3.Linear(self.gate.irreps_out, self.irreps_out)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply the pre-gate, gate, and post-gate transformations."""
         x = self.pre_gate(x)
         x = self.gate(x)
         x = self.post_gate(x)

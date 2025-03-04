@@ -1,13 +1,15 @@
 from typing import Callable, Mapping, Optional
 
 import e3nn
-import torch
 from e3nn import o3
+import torch
 
 from ._gate import Gate
 
 
 class ScalarMLP(torch.nn.Sequential):
+    """A multi-layer perceptron for scalar inputs and outputs."""
+    
     def __init__(
         self,
         in_features: int,
@@ -82,6 +84,8 @@ class EquivariantMLPBlock(torch.nn.Module):
 
 
 class EquivariantMLP(torch.nn.Sequential):
+    """An equivariant multi-layer perceptron with gated non-linearities."""
+
     def __init__(
         self,
         irreps_in: e3nn.o3.Irreps,

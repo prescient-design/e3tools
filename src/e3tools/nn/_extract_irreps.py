@@ -25,4 +25,13 @@ class ExtractIrreps(torch.nn.Module):
         self.irreps_out = irreps_out
 
     def forward(self, data: torch.Tensor) -> torch.Tensor:
+        """Extracts the specified irreps from the input tensor.
+
+        Parameters:
+            data: torch.Tensor of shape [..., irreps_in.dim]
+        
+        Returns:
+            torch.Tensor of shape [..., irreps_out.dim]
+        """
+
         return torch.cat([data[..., s] for s in self.slices], dim=-1)
