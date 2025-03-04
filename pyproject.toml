@@ -1,6 +1,6 @@
 [project]
 name = "e3tools"
-version = "0.1.0"
+version = "0.0.1"
 description = "Add your description here"
 readme = "README.md"
 authors = [
