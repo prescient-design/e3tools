@@ -29,7 +29,7 @@ class ExtractIrreps(torch.nn.Module):
 
         Parameters:
             data: torch.Tensor of shape [..., irreps_in.dim]
-        
+
         Returns:
             torch.Tensor of shape [..., irreps_out.dim]
         """

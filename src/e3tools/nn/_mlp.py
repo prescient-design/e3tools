@@ -9,7 +9,7 @@ from ._gate import Gate
 
 class ScalarMLP(torch.nn.Sequential):
     """A multi-layer perceptron for scalar inputs and outputs."""
-    
+
     def __init__(
         self,
         in_features: int,

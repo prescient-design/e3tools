@@ -99,7 +99,7 @@ class MulToAxis(torch.nn.Module):
 
         Parameters:
             x: torch.Tensor of shape [..., irreps.dim]
-        
+
         Returns:
             torch.Tensor of shape [..., factor, irreps.dim // factor]
         """
@@ -121,7 +121,7 @@ class AxisToMul(torch.nn.Module):
 
         Parameters:
             x: torch.Tensor of shape [..., factor, irreps.dim // factor]
-        
+
         Returns:
             torch.Tensor of shape [..., irreps.dim]
         """

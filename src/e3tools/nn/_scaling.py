@@ -21,7 +21,7 @@ class ScaleIrreps(torch.nn.Module):
         Parameters:
             data: torch.Tensor of shape [..., irreps_in.dim]
             weights: torch.Tensor of shape [..., irreps_in.num_irreps]
-        
+
         Returns:
             torch.Tensor of shape [..., irreps_in.dim]
         """
