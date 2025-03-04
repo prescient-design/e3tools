@@ -1,8 +1,8 @@
 [project]
 name = "e3tools"
-version = "0.0.1"
 description = "Add your description here"
 readme = "README.md"
+dynamic = ["version"]
 authors = [
     { name = "Joseph Kleinhenz", email = "kleinhej@gene.com" }
 ]
@@ -14,13 +14,22 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "hatch>=1.14.0",
     "pytest>=8.3.4",
 ]
 
 [tool.ruff.lint]
 ignore = ["F722"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+fallback_version = "0.0.0"
+local_scheme = "no-local-version" # see https://github.com/pypa/setuptools-scm/issues/455

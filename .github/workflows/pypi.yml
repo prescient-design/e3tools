@@ -1,22 +1,22 @@
-name: publish package on test pypi
+name: publish package on pypi
 
 on:
   workflow_dispatch:
+  release:
+    types:
+      - published
 
 jobs:
   publish-to-testpypi:
-    name: "publish to testpypi"
+    name: "publish to pypi"
     runs-on: "ubuntu-latest"
 
     environment:
-      name: testpypi
-      url: https://test.pypi.org/p/e3tools
+      name: pypi
+      url: https://pypi.org/p/e3tools
 
     permissions:
       id-token: write
-
-    env:
-      UV_PUBLISH_URL: https://test.pypi.org/legacy/
 
     steps:
       - uses: "actions/checkout@v4"
