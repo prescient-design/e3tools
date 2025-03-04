@@ -53,6 +53,15 @@
 <div class="viewcode-block" id="ScaleIrreps.forward">
 <a class="viewcode-back" href="../../../e3tools.nn.html#e3tools.nn.ScaleIrreps.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scales each irrep by a weight.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            data: torch.Tensor of shape [..., irreps_in.dim]</span>
+<span class="sd">            weights: torch.Tensor of shape [..., irreps_in.num_irreps]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor of shape [..., irreps_in.dim]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span></div>
 </div>
 
@@ -83,6 +92,10 @@
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../e3tools.html">e3tools package</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>

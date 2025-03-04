@@ -34,8 +34,8 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">e3nn</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">e3nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">o3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._gate</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gate</span>
 
@@ -43,6 +43,8 @@
 <div class="viewcode-block" id="ScalarMLP">
 <a class="viewcode-back" href="../../../e3tools.nn.html#e3tools.nn.ScalarMLP">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ScalarMLP</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A multi-layer perceptron for scalar inputs and outputs.&quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -120,6 +122,8 @@
 <div class="viewcode-block" id="EquivariantMLP">
 <a class="viewcode-back" href="../../../e3tools.nn.html#e3tools.nn.EquivariantMLP">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EquivariantMLP</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An equivariant multi-layer perceptron with gated non-linearities.&quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">irreps_in</span><span class="p">:</span> <span class="n">e3nn</span><span class="o">.</span><span class="n">o3</span><span class="o">.</span><span class="n">Irreps</span><span class="p">,</span>
@@ -178,6 +182,10 @@
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../e3tools.html">e3tools package</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>

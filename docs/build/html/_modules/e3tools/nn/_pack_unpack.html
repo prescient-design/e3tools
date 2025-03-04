@@ -132,6 +132,15 @@
 <div class="viewcode-block" id="MulToAxis.forward">
 <a class="viewcode-back" href="../../../e3tools.nn.html#e3tools.nn.MulToAxis.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds a new axis by factoring out irreps.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x: torch.Tensor of shape [..., irreps.dim]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor of shape [..., factor, irreps.dim // factor]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">return</span> <span class="n">mul_to_axis</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">irreps_in</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
@@ -151,6 +160,14 @@
 <div class="viewcode-block" id="AxisToMul.forward">
 <a class="viewcode-back" href="../../../e3tools.nn.html#e3tools.nn.AxisToMul.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collapses the second-last axis by flattening the irreps.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x: torch.Tensor of shape [..., factor, irreps.dim // factor]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor of shape [..., irreps.dim]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">axis_to_mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">irreps_in</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
@@ -181,6 +198,10 @@
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../e3tools.html">e3tools package</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
