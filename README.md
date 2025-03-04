@@ -5,5 +5,5 @@ A repository of building blocks in PyTorch for E(3)/SE(3)-equivariant neural net
 ## Install
 
 ```bash
-uv sync
+pip install e3tools
 ```
