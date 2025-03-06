@@ -41,8 +41,8 @@ jobs:
       - name: Build docs
         run: |
           cd docs
-          sphinx-apidoc -o source ../src
-          sphinx-build -M html source build
+          uv run sphinx-apidoc -o source ../src
+          uv run sphinx-build -M html source build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
