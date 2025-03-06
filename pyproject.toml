@@ -1,12 +1,12 @@
 [project]
 name = "e3tools"
-description = "Add your description here"
+description = "A repository of building blocks in PyTorch for E(3)/SE(3)-equivariant neural networks"
 readme = "README.md"
 dynamic = ["version"]
 authors = [
     { name = "Joseph Kleinhenz", email = "kleinhej@gene.com" }
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "e3nn>=0.5.5",
     "jaxtyping>=0.2.38",
