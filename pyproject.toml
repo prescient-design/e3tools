@@ -21,7 +21,7 @@ build-backend = "hatchling.build"
 dev = [
     "hatch>=1.14.0",
     "pytest>=8.3.4",
-    "sphinx>=8.2.3",
+    "sphinx",
 ]
 
 [tool.ruff.lint]
