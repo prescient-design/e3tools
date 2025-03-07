@@ -4,7 +4,8 @@ description = "A repository of building blocks in PyTorch for E(3)/SE(3)-equivar
 readme = "README.md"
 dynamic = ["version"]
 authors = [
-    { name = "Joseph Kleinhenz", email = "kleinhej@gene.com" }
+    { name = "Joseph Kleinhenz", email = "kleinhej@gene.com" },
+    { name = "Ameya Daigavane", email = "ameyad@mit.edu" },
 ]
 requires-python = ">=3.10"
 dependencies = [
