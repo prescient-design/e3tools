@@ -28,6 +28,7 @@ class LayerNormCompiled(torch.nn.Module):
         self.irreps_in = o3.Irreps(irreps)
         self.irreps_out = o3.Irreps(irreps)
         self.eps = eps
+        self.irreps_in_dim = self.irreps_in.dim
 
         # Pre-compute indices and shapes for reshaping operations
         self._setup_indices_and_shapes()
@@ -90,50 +91,72 @@ class LayerNormCompiled(torch.nn.Module):
             Normalized tensor of shape [..., self.irreps_out.dim]
         """
         # Check input shape
-        assert x.shape[-1] == self.irreps_in.dim, (
+        assert x.shape[-1] == self.irreps_in_dim, (
             f"Last dimension of x (shape {x.shape}) doesn't match irreps_in.dim "
-            f"({self.irreps_in} with dim {self.irreps_in.dim})"
+            f"({self.irreps_in} with dim {self.irreps_in_dim})"
         )
 
         # Get batch dimensions (everything except the last dim)
-        batch_shape = x.shape[:-1]
+        batch_dims = list(x.shape[:-1])
+        flat_batch_size = (
+            torch.prod(torch.tensor(batch_dims)).item() if batch_dims else 1
+        )
+
+        # Flatten batch dimensions for simpler processing
+        # This avoids reshape issues with symbolic shapes
+        x_flat = x.reshape(flat_batch_size, -1)
 
         # Process each irrep and collect outputs
         output_fields = []
 
-        for i, (start_idx, size, mul, dim, is_scalar) in enumerate(
-            zip(self.start_indices, self.sizes, self.muls, self.dims, self.scalar_masks)
-        ):
+        for i in range(len(self.start_indices)):
+            start_idx = self.start_indices[i]
+            size = self.sizes[i]
+            mul = self.muls[i]
+            dim = self.dims[i]
+            is_scalar = self.scalar_masks[i]
+
             # Extract the field for this irrep
-            field = x.narrow(-1, start_idx, size)
+            field = x_flat.narrow(-1, start_idx, size)
 
-            # Reshape to [..., mul, dim]
-            field = field.reshape(*batch_shape, mul, dim)
+            # Reshape to [flat_batch_size, mul, dim]
+            # Using view instead of reshape for better traceability
+            field_view = field.view(flat_batch_size, mul, dim)
 
-            if False or is_scalar:
+            if is_scalar:
                 # For scalar irreps (l=0, p=1), use standard layer norm
-                # F.layer_norm expects normalized_shape as a list of dimensions to normalize over
-                field = F.layer_norm(field, [mul, 1], None, None, self.eps)
-                output_fields.append(field.reshape(*batch_shape, size))
+                field_norm = F.layer_norm(field_view, [dim], None, None, self.eps)
+                # Flatten back for concatenation
+                field_out = field_norm.reshape(flat_batch_size, size)
             else:
                 # For non-scalar irreps, normalize by the L2 norm
                 # Compute squared L2 norm along the last dimension
-                norm2 = field.pow(2).sum(-1)  # [..., mul]
+                norm2 = torch.sum(field_view.pow(2), dim=-1)  # [flat_batch_size, mul]
 
                 # Compute RMS of the norm across multiplicity
-                field_norm = (norm2.mean(dim=-1) + self.eps).pow(-0.5)  # [...]
+                mean_norm2 = torch.mean(
+                    norm2, dim=-1, keepdim=True
+                )  # [flat_batch_size, 1]
+                field_norm = torch.rsqrt(mean_norm2 + self.eps)  # [flat_batch_size, 1]
 
-                # Reshape for broadcasting
-                field_norm = field_norm.reshape(*batch_shape, 1, 1)
+                # Add an extra dimension for broadcasting
+                field_norm = field_norm.unsqueeze(-1)  # [flat_batch_size, 1, 1]
 
                 # Apply normalization
-                field = field * field_norm
+                field_norm = field_view * field_norm
 
-                # Reshape back to original format
-                output_fields.append(field.reshape(*batch_shape, size))
+                # Flatten back for concatenation
+                field_out = field_norm.reshape(flat_batch_size, size)
+
+            output_fields.append(field_out)
 
         # Concatenate all fields
-        return torch.cat(output_fields, dim=-1)
+        output_flat = torch.cat(output_fields, dim=-1)
+
+        # Restore batch dimensions
+        output = output_flat.reshape(*batch_dims, -1)
+
+        return output
 
 
 class LayerNorm(torch.nn.Module):

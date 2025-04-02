@@ -176,9 +176,10 @@ class AxisToMul(torch.nn.Module):
 
     def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):
         super().__init__()
-        self.irreps_in = irreps_in
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
         self.irreps_out = e3nn.o3.Irreps([(mul * factor, ir) for mul, ir in irreps_in])
         self.factor = factor
+        self.irreps_in_dim = self.irreps_in.dim
 
         # Pre-compute indices and shapes for reshaping operations
         self._setup_indices_and_shapes()
@@ -228,9 +229,9 @@ class AxisToMul(torch.nn.Module):
             torch.Tensor of shape [..., irreps_out.dim]
         """
         # Check input shape
-        assert x.shape[-1] == self.irreps_in.dim, (
+        assert x.shape[-1] == self.irreps_in_dim, (
             f"Last dimension of x (shape {x.shape}) doesn't match irreps_in.dim "
-            f"({self.irreps_in} with dim {self.irreps_in.dim})"
+            f"({self.irreps_in} with dim {self.irreps_in_dim})"
         )
         assert x.shape[-2] == self.factor, (
             f"Second-last dimension of x (shape {x.shape}) doesn't match factor {self.factor}"

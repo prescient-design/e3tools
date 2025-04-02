@@ -6,6 +6,7 @@ import torch
 
 from e3tools.nn import AxisToMul, MulToAxis
 
+
 @pytest.mark.parametrize(
     "irreps_in, factor",
     zip(
@@ -113,7 +114,7 @@ def test_axis_to_mul_compiled(irreps_in: str, factor: int, batch_size: int = 5):
     irreps_in = e3nn.o3.Irreps(irreps_in)
     input = irreps_in.randn(batch_size, factor, -1)
     layer = AxisToMul(irreps_in, factor)
-    layer_compiled = torch.compile(layer)
+    layer_compiled = torch.compile(layer, fullgraph=True)
 
     assert torch.allclose(layer(input), layer_compiled(input))
 
@@ -129,6 +130,6 @@ def test_mul_to_axis_compiled(irreps_in: str, factor: int, batch_size: int = 5):
     irreps_in = e3nn.o3.Irreps(irreps_in)
     input = irreps_in.randn(batch_size, -1)
     layer = MulToAxis(irreps_in, factor)
-    layer_compiled = torch.compile(layer)
+    layer_compiled = torch.compile(layer, fullgraph=True)
 
     assert torch.allclose(layer(input), layer_compiled(input))

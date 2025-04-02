@@ -9,10 +9,10 @@ from e3tools.nn._layer_norm import LayerNormCompiled
 from e3tools.nn._pack_unpack import unpack_irreps
 
 
-@pytest.mark.parametrize("irreps_in", ["0e + 1o", "0e + 1o + 2e", "3x1o + 2x2o"])
+@pytest.mark.parametrize("irreps_in", ["0e + 1o", "32x0e + 1o + 2e", "3x1o + 2x2o"])
 def test_equivariance(irreps_in: str):
     irreps_in = e3nn.o3.Irreps(irreps_in)
-    layer = LayerNorm(irreps_in)
+    layer = LayerNormCompiled(irreps_in)
     e3nn.util.test.assert_equivariant(
         layer,
         irreps_in=layer.irreps_in,
@@ -45,7 +45,7 @@ def test_layer_norm_compiled(irreps_in: str):
 @pytest.mark.parametrize("irreps_in", ["0e + 1o", "32x0e + 1o + 2e", "3x1o + 2x2o"])
 def test_layer_norm(irreps_in: str):
     irreps_in = e3nn.o3.Irreps(irreps_in)
-    layer = LayerNorm(irreps_in)
+    layer = LayerNormCompiled(irreps_in)
     assert layer.irreps_in == irreps_in
     assert layer.irreps_out == irreps_in
 
