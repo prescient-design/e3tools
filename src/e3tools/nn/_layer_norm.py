@@ -3,10 +3,8 @@ import torch
 import torch.nn.functional as F
 from e3nn import o3
 
-from ._pack_unpack import unpack_irreps
 
-
-class LayerNormCompiled(torch.nn.Module):
+class LayerNorm(torch.nn.Module):
     """
     Equivariant layer normalization compatible with torch.compile.
 
@@ -97,14 +95,7 @@ class LayerNormCompiled(torch.nn.Module):
         )
 
         # Get batch dimensions (everything except the last dim)
-        batch_dims = list(x.shape[:-1])
-        flat_batch_size = (
-            torch.prod(torch.tensor(batch_dims)).item() if batch_dims else 1
-        )
-
-        # Flatten batch dimensions for simpler processing
-        # This avoids reshape issues with symbolic shapes
-        x_flat = x.reshape(flat_batch_size, -1)
+        batch_dims = x.shape[:-1]
 
         # Process each irrep and collect outputs
         output_fields = []
@@ -117,17 +108,17 @@ class LayerNormCompiled(torch.nn.Module):
             is_scalar = self.scalar_masks[i]
 
             # Extract the field for this irrep
-            field = x_flat.narrow(-1, start_idx, size)
+            field = x.narrow(-1, start_idx, size)
 
             # Reshape to [flat_batch_size, mul, dim]
             # Using view instead of reshape for better traceability
-            field_view = field.view(flat_batch_size, mul, dim)
+            field_view = field.view(*batch_dims, mul, dim)
 
             if is_scalar:
                 # For scalar irreps (l=0, p=1), use standard layer norm
                 field_norm = F.layer_norm(field_view, [dim], None, None, self.eps)
                 # Flatten back for concatenation
-                field_out = field_norm.reshape(flat_batch_size, size)
+                field_out = field_norm.reshape(*batch_dims, size)
             else:
                 # For non-scalar irreps, normalize by the L2 norm
                 # Compute squared L2 norm along the last dimension
@@ -146,60 +137,9 @@ class LayerNormCompiled(torch.nn.Module):
                 field_norm = field_view * field_norm
 
                 # Flatten back for concatenation
-                field_out = field_norm.reshape(flat_batch_size, size)
+                field_out = field_norm.reshape(*batch_dims, size)
 
             output_fields.append(field_out)
 
         # Concatenate all fields
-        output_flat = torch.cat(output_fields, dim=-1)
-
-        # Restore batch dimensions
-        output = output_flat.reshape(*batch_dims, -1)
-
-        return output
-
-
-class LayerNorm(torch.nn.Module):
-    """
-    Equivariant layer normalization.
-
-    ref: https://github.com/atomicarchitects/equiformer/blob/master/nets/fast_layer_norm.py
-    """
-
-    def __init__(self, irreps: e3nn.o3.Irreps, eps: float = 1e-6):
-        """
-        Parameters
-        ----------
-        irreps: e3nn.o3.Irreps
-            Input/output irreps
-        eps: float = 1e-6
-            softening factor
-        """
-        super().__init__()
-        self.irreps_in = o3.Irreps(irreps)
-        self.irreps_out = o3.Irreps(irreps)
-        self.eps = eps
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Apply layer normalization to input tensor.
-        Each irrep is normalized independently.
-        """
-        # x: [..., self.irreps.dim]
-        fields = []
-        for mul, ir, field in unpack_irreps(x, self.irreps_in):
-            # field: [..., mul, 2*l+1]
-            if ir.l == 0 and ir.p == 1:
-                field = F.layer_norm(field, (1,), None, None, self.eps)
-                fields.append(field.reshape(-1, mul))
-                continue
-
-            norm2 = field.pow(2).sum(-1)  # [..., mul] (squared L2 norm of l-reprs)
-            field_norm = (norm2.mean(dim=-1) + self.eps).pow(
-                -0.5
-            )  # [...] (1/RMS(norm))
-            field = field * field_norm.reshape(-1, 1, 1)
-            fields.append(field.reshape(-1, mul * ir.dim))
-
-        output = torch.cat(fields, dim=-1)
-        return output
+        return torch.cat(output_fields, dim=-1)
