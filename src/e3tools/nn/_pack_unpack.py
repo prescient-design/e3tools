@@ -86,48 +86,6 @@ def axis_to_mul(
 
 
 class MulToAxis(torch.nn.Module):
-    """Adds a new axis by factoring out irreps."""
-
-    def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):
-        super().__init__()
-        self.irreps_in = irreps_in
-        self.irreps_out = e3nn.o3.Irreps([(mul // factor, ir) for mul, ir in irreps_in])
-        self.factor = factor
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Adds a new axis by factoring out irreps.
-
-        Parameters:
-            x: torch.Tensor of shape [..., irreps.dim]
-
-        Returns:
-            torch.Tensor of shape [..., factor, irreps.dim // factor]
-        """
-
-        return mul_to_axis(x, self.irreps_in, factor=self.factor)[0]
-
-
-class AxisToMul(torch.nn.Module):
-    """Collapses the second-last axis by flattening the irreps."""
-
-    def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):
-        super().__init__()
-        self.irreps_in = irreps_in
-        self.irreps_out = e3nn.o3.Irreps([(mul * factor, ir) for mul, ir in irreps_in])
-        self.factor = factor
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Collapses the second-last axis by flattening the irreps.
-
-        Parameters:
-            x: torch.Tensor of shape [..., factor, irreps.dim // factor]
-
-        Returns:
-            torch.Tensor of shape [..., irreps.dim]
-        """
-        return axis_to_mul(x, self.irreps_in)[0]
-
-class MulToAxisCompiled(torch.nn.Module):
     """Adds a new axis by factoring out irreps. Compatible with torch.compile."""
 
     def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):
@@ -135,7 +93,7 @@ class MulToAxisCompiled(torch.nn.Module):
         self.irreps_in = irreps_in
         self.irreps_out = e3nn.o3.Irreps([(mul // factor, ir) for mul, ir in irreps_in])
         self.factor = factor
-        
+
         # Pre-compute indices and shapes for reshaping operations
         # This avoids dynamic operations during forward pass
         self._setup_indices_and_shapes()
@@ -144,33 +102,35 @@ class MulToAxisCompiled(torch.nn.Module):
         """Pre-compute indices and shapes for reshaping operations."""
         irreps = self.irreps_in
         factor = self.factor
-        
+
         # Store the start indices for each irrep
         self.start_indices = []
         # Store the sizes (mul * ir.dim) for each irrep
         self.sizes = []
         # Store the output shapes for each irrep
         self.out_shapes = []
-        
+
         idx = 0
         for mul, ir in irreps:
             if mul % factor != 0:
                 raise ValueError(
                     f"irrep multiplicity {mul} is not divisible by factor {factor}"
                 )
-            
+
             size = mul * ir.dim
             self.start_indices.append(idx)
             self.sizes.append(size)
-            
+
             # New shape after factoring
             new_mul = mul // factor
             self.out_shapes.append((factor, new_mul, ir.dim))
-            
+
             idx += size
-            
+
         # Register these as buffers so they're saved/loaded with the model
-        self.register_buffer("_start_indices", torch.tensor(self.start_indices, dtype=torch.long))
+        self.register_buffer(
+            "_start_indices", torch.tensor(self.start_indices, dtype=torch.long)
+        )
         self.register_buffer("_sizes", torch.tensor(self.sizes, dtype=torch.long))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -186,30 +146,32 @@ class MulToAxisCompiled(torch.nn.Module):
         # Get the batch dimensions (everything except the last dim)
         batch_dims = x.shape[:-1]
         factor = self.factor
-        
+
         # Create output tensor
         output_list = []
-        
+
         # Process each irrep separately and concatenate at the end
-        for i, (start_idx, size, out_shape) in enumerate(zip(self.start_indices, 
-                                                             self.sizes, 
-                                                             self.out_shapes)):
+        for i, (start_idx, size, out_shape) in enumerate(
+            zip(self.start_indices, self.sizes, self.out_shapes)
+        ):
             # Extract the field
             field = x.narrow(-1, start_idx, size)
-            
+
             # Reshape to factor out the multiplicity
             field_reshaped = field.reshape(*batch_dims, *out_shape)
-            
+
             # Reshape to match the expected output format
-            field_out = field_reshaped.reshape(*batch_dims, factor, out_shape[1] * out_shape[2])
-            
+            field_out = field_reshaped.reshape(
+                *batch_dims, factor, out_shape[1] * out_shape[2]
+            )
+
             output_list.append(field_out)
-        
+
         # Concatenate along the last dimension
         return torch.cat(output_list, dim=-1)
 
 
-class AxisToMulCompiled(torch.nn.Module):
+class AxisToMul(torch.nn.Module):
     """Collapses the second-last axis by flattening the irreps. Compatible with torch.compile."""
 
     def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):
@@ -217,7 +179,7 @@ class AxisToMulCompiled(torch.nn.Module):
         self.irreps_in = irreps_in
         self.irreps_out = e3nn.o3.Irreps([(mul * factor, ir) for mul, ir in irreps_in])
         self.factor = factor
-        
+
         # Pre-compute indices and shapes for reshaping operations
         self._setup_indices_and_shapes()
 
@@ -225,7 +187,7 @@ class AxisToMulCompiled(torch.nn.Module):
         """Pre-compute indices and shapes for reshaping operations."""
         irreps = self.irreps_in
         factor = self.factor
-        
+
         # Store the start indices for each irrep
         self.start_indices = []
         # Store the sizes (mul * ir.dim) for each irrep
@@ -234,24 +196,26 @@ class AxisToMulCompiled(torch.nn.Module):
         self.int_shapes = []
         # Store output shapes for each irrep
         self.out_shapes = []
-        
+
         idx = 0
         for mul, ir in irreps:
             size = mul * ir.dim
             self.start_indices.append(idx)
             self.sizes.append(size)
-            
+
             # Intermediate shape (factored)
             self.int_shapes.append((mul, ir.dim))
-            
+
             # Output shape (after collapsing the axis)
             new_mul = mul * factor
             self.out_shapes.append((new_mul, ir.dim))
-            
+
             idx += size
-            
+
         # Register these as buffers so they're saved/loaded with the model
-        self.register_buffer("_start_indices", torch.tensor(self.start_indices, dtype=torch.long))
+        self.register_buffer(
+            "_start_indices", torch.tensor(self.start_indices, dtype=torch.long)
+        )
         self.register_buffer("_sizes", torch.tensor(self.sizes, dtype=torch.long))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -271,32 +235,31 @@ class AxisToMulCompiled(torch.nn.Module):
         assert x.shape[-2] == self.factor, (
             f"Second-last dimension of x (shape {x.shape}) doesn't match factor {self.factor}"
         )
-        
+
         # Get the batch dimensions (everything except the last two dims)
         batch_dims = x.shape[:-2]
         factor = self.factor
-        
+
         # Create output tensor
         output_list = []
-        
+
         # Process each irrep separately and concatenate at the end
-        for i, (start_idx, size, int_shape, out_shape) in enumerate(zip(self.start_indices, 
-                                                                        self.sizes, 
-                                                                        self.int_shapes, 
-                                                                        self.out_shapes)):
+        for i, (start_idx, size, int_shape, out_shape) in enumerate(
+            zip(self.start_indices, self.sizes, self.int_shapes, self.out_shapes)
+        ):
             # Extract the field
             field = x.narrow(-1, start_idx, size)
-            
+
             # Reshape to intermediate format
             field_int = field.reshape(*batch_dims, factor, *int_shape)
-            
+
             # Reshape to output format
             field_out = field_int.reshape(*batch_dims, out_shape[0], out_shape[1])
-            
+
             # Flatten the dimensions for concatenation
             field_flat = field_out.reshape(*batch_dims, out_shape[0] * out_shape[1])
-            
+
             output_list.append(field_flat)
-        
+
         # Concatenate along the last dimension
         return torch.cat(output_list, dim=-1)
