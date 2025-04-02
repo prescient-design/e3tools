@@ -70,7 +70,7 @@ class LayerNormCompiled(torch.nn.Module):
         self.register_buffer("_ps", torch.tensor(self.ps, dtype=torch.long))
 
         # Create a mask for scalar (l=0, p=1) irreps for faster processing
-        self.scalar_masks = [(l == 0 and p == 1) for l, p in zip(self.ls, self.ps)]
+        self.scalar_masks = [(l == 0 and p == 1) for l, p in zip(self.ls, self.ps)] # noqa: E741
         self.register_buffer(
             "_scalar_masks", torch.tensor(self.scalar_masks, dtype=torch.bool)
         )

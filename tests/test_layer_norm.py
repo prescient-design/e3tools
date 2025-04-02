@@ -32,8 +32,8 @@ def test_equivariance(irreps_in: str):
 )
 def test_layer_norm_compiled(irreps_in: str):
     irreps_in = e3nn.o3.Irreps(irreps_in)
-    layer = LayerNormCompiled(irreps_in)
-    layer_compiled = torch.compile(layer, fullgraph=True)
+    layer = LayerNorm(irreps_in)
+    layer_compiled = torch.compile(LayerNormCompiled(irreps_in), fullgraph=True)
 
     input = irreps_in.randn(-1)
     output = layer(input)
