@@ -4,7 +4,7 @@ import e3nn
 import e3nn.util.test
 import torch
 
-from e3tools.nn import AxisToMul, MulToAxis
+from e3tools.nn import AxisToMul, MulToAxis, AxisToMulCompiled, MulToAxisCompiled
 
 
 @pytest.mark.parametrize(
@@ -101,3 +101,36 @@ def test_inverse(irreps_in: str, factor: int, batch_size: int = 5):
     recovered = inv_layer(output)
 
     assert torch.allclose(input, recovered)
+
+
+@pytest.mark.parametrize(
+    "irreps_in, factor",
+    zip(
+        ["0e + 1o", "8x0e + 8x1o + 8x2e", "8x0e + 8x1o + 8x2e", "3x1o + 3x2o"],
+        [1, 2, 4, 3],
+    ),
+)
+def test_axis_to_mul_compiled(irreps_in: str, factor: int, batch_size: int = 5):
+    irreps_in = e3nn.o3.Irreps(irreps_in)
+    input = irreps_in.randn(batch_size, factor, -1)
+    layer = AxisToMul(irreps_in, factor)
+    layer_compiled = AxisToMulCompiled(irreps_in, factor)
+
+    assert torch.allclose(layer(input), layer_compiled(input))
+
+
+
+@pytest.mark.parametrize(
+    "irreps_in, factor",
+    zip(
+        ["0e + 1o", "8x0e + 8x1o + 8x2e", "8x0e + 8x1o + 8x2e", "3x1o + 3x2o"],
+        [1, 2, 4, 3],
+    ),
+)
+def test_mul_to_axis_compiled(irreps_in: str, factor: int, batch_size: int = 5):
+    irreps_in = e3nn.o3.Irreps(irreps_in)
+    input = irreps_in.randn(batch_size, -1)
+    layer = MulToAxis(irreps_in, factor)
+    layer_compiled = MulToAxisCompiled(irreps_in, factor)
+
+    assert torch.allclose(layer(input), layer_compiled(input))
