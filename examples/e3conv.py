@@ -19,6 +19,7 @@ class E3Conv(nn.Module):
         num_layers: int,
         edge_attr_dim: int,
         atom_type_embedding_dim: int,
+        num_atom_types: int,
         max_radius: float,
     ):
         super().__init__()
@@ -40,7 +41,7 @@ class E3Conv(nn.Module):
         self.embed_bondedness = nn.Embedding(2, self.bonded_edge_attr_dim)
 
         self.atom_embedder = nn.Embedding(
-            num_embeddings=100,
+            num_embeddings=num_atom_types,
             embedding_dim=atom_type_embedding_dim,
         )
         self.initial_linear = o3.Linear(
