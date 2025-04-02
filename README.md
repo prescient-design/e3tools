@@ -9,8 +9,14 @@ A repository of building blocks in PyTorch for E(3)/SE(3)-equivariant neural net
 - Extracting Irreps: [`e3tools.nn.ExtractIrreps`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_extract_irreps.py#L5)
 - Self-Interactions: [`e3tools.nn.LinearSelfInteraction`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_interaction.py#L5)
 
+All modules are compatible with PyTorch 2.0's `torch.compile` for JIT compilation!
+
 ## Installation
 
 ```bash
 pip install e3tools
 ```
+
+## Examples
+
+See [examples/e3conv.py](https://github.com/prescient-design/e3tools/blob/main/examples/e3conv.py) for an example of a simple E(3)-equivariant message passing network built with `e3tools`!
