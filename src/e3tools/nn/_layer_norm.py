@@ -167,7 +167,7 @@ class LayerNorm(torch.nn.Module):
         for mul, ir, field in unpack_irreps(x, self.irreps_in):
             # field: [..., mul, 2*l+1]
             if ir.l == 0 and ir.p == 1:
-                field = F.layer_norm(field, (mul, 1), None, None, self.eps)
+                field = F.layer_norm(field, (1,), None, None, self.eps)
                 fields.append(field.reshape(-1, mul))
                 continue
 
