@@ -5,6 +5,7 @@ import e3nn.util.test
 import torch
 
 from e3tools.nn import LayerNorm
+from e3tools.nn._layer_norm import LayerNormCompiled
 from e3tools.nn._pack_unpack import unpack_irreps
 
 
@@ -19,10 +20,23 @@ def test_equivariance(irreps_in: str):
     )
 
 
+@pytest.mark.parametrize("irreps_in", ["0e + 1o", "0e + 1o + 2e", "3x1o + 2x2o", "8x1o + 2x2o + 1x3o", "3x1o + 2x2o + 1x3o + 1x4o"])
+def test_layer_norm_compiled(irreps_in: str):
+    irreps_in = e3nn.o3.Irreps(irreps_in)
+    layer = LayerNormCompiled(irreps_in)
+    layer_compiled = torch.compile(layer)
+
+    input = irreps_in.randn(-1)
+    output = layer(input)
+    output_compiled = layer_compiled(input)
+
+    assert torch.allclose(output, output_compiled)
+    
+
 @pytest.mark.parametrize("irreps_in", ["0e + 1o", "0e + 1o + 2e", "3x1o + 2x2o"])
 def test_layer_norm(irreps_in: str):
     irreps_in = e3nn.o3.Irreps(irreps_in)
-    layer = LayerNorm(irreps_in)
+    layer = LayerNormCompiled(irreps_in)
     assert layer.irreps_in == irreps_in
     assert layer.irreps_out == irreps_in
 
