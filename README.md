@@ -19,5 +19,5 @@ pip install e3tools
 
 ## Examples
 
-See [examples/e3conv.py](https://github.com/prescient-design/e3tools/blob/main/examples/e3conv.py) for an example 
+See [examples/e3conv.py](https://github.com/prescient-design/e3tools/blob/main/examples/e3conv.py) for an example
 of a simple E(3)-equivariant message passing network built with `e3tools`.
