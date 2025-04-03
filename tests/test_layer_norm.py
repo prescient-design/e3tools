@@ -44,7 +44,9 @@ def test_layer_norm_compiled(irreps_in: str, seed: int, batch_size: int = 8):
     assert torch.allclose(output, output_compiled)
 
 
-@pytest.mark.parametrize("irreps_in", ["0e + 1o", "32x0e + 1o + 2e", "0e + 4x1o + 5e", "3x1o + 2x2o"])
+@pytest.mark.parametrize(
+    "irreps_in", ["0e + 1o", "32x0e + 1o + 2e", "0e + 4x1o + 5e", "3x1o + 2x2o"]
+)
 def test_layer_norm(irreps_in: str):
     irreps_in = e3nn.o3.Irreps(irreps_in)
     layer = LayerNorm(irreps_in)
