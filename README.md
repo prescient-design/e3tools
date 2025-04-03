@@ -13,8 +13,15 @@ All modules are compatible with PyTorch 2.0's `torch.compile` for JIT compilatio
 
 ## Installation
 
+Install from PyPI:
+
 ```bash
 pip install e3tools
+```
+
+or get the latest development version from GitHub:
+```bash
+pip install git+https://github.com/prescient-design/e3tools.git
 ```
 
 ## Examples

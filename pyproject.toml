@@ -19,7 +19,7 @@ dependencies = [
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "hatch>=1.14.0",
     "ipython>=8.34.0",
