@@ -116,7 +116,7 @@ class LayerNorm(torch.nn.Module):
 
             if is_scalar:
                 # For scalar irreps (l=0, p=1), use standard layer norm
-                field_norm = F.layer_norm(field_view, [dim], None, None, self.eps)
+                field_norm = F.layer_norm(field_view, [mul, dim], None, None, self.eps)
                 # Flatten back for concatenation
                 field_out = field_norm.reshape(*batch_dims, size)
             else:
