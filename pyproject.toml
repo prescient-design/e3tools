@@ -25,6 +25,7 @@ dev = [
     "ipython>=8.34.0",
     "pytest>=8.3.4",
     "sphinx",
+    "ruff",
 ]
 
 [tool.ruff.lint]
