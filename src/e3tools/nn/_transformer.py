@@ -1,9 +1,10 @@
+from typing import Callable, Optional, Tuple
 import itertools
-from typing import Callable, Optional
 
 import e3nn
+import e3nn.o3
 import torch
-from e3nn import o3
+from torch import nn
 
 from e3tools import scatter
 
@@ -13,19 +14,23 @@ from ._layer_norm import LayerNorm
 from ._mlp import EquivariantMLP
 
 
-def split_irreps(irreps: e3nn.o3.Irreps, n_head: int):
+def split_irreps(
+    irreps: e3nn.o3.Irreps, num_heads: int
+) -> Tuple[e3nn.o3.Irreps, e3nn.o3.Irreps]:
+    """Split irreps across heads."""
     for mul, ir in irreps:
-        assert mul % n_head == 0
+        assert mul % num_heads == 0
 
-    irreps_per_head = o3.Irreps([(mul // n_head, ir) for mul, ir in irreps])
-    irreps_split = sum(itertools.repeat(irreps_per_head, n_head), start=o3.Irreps())
-
+    irreps_per_head = e3nn.o3.Irreps([(mul // num_heads, ir) for mul, ir in irreps])
+    irreps_split = sum(
+        itertools.repeat(irreps_per_head, num_heads), start=e3nn.o3.Irreps()
+    )
     assert irreps.dim == irreps_split.dim
 
     return irreps_split, irreps_per_head
 
 
-class Attention(torch.nn.Module):
+class Attention(nn.Module):
     """
     Equivariant attention layer
 
@@ -40,7 +45,7 @@ class Attention(torch.nn.Module):
         irreps_query: e3nn.o3.Irreps,
         irreps_key: e3nn.o3.Irreps,
         edge_attr_dim,
-        conv: Optional[Callable[..., torch.nn.Module]] = None,
+        conv: Optional[Callable[..., nn.Module]] = None,
         return_attention: bool = False,
     ):
         """
@@ -58,20 +63,20 @@ class Attention(torch.nn.Module):
             Attention key irreps
         edge_attr_dim: int
             Dimension of scalar edge attributes to be passed to radial_nn
-        conv: Optional[Callable[..., torch.nn.Module]] = None
+        conv: Optional[Callable[..., nn.Module]] = None
             Factory function for convolution layer used for computing keys and values
         return_attention: bool = False
             Whether to return attn or not
         """
         super().__init__()
-        self.irreps_in = o3.Irreps(irreps_in)
-        self.irreps_out = o3.Irreps(irreps_out)
-        self.irreps_sh = o3.Irreps(irreps_sh)
-        self.irreps_query = o3.Irreps(irreps_query)
-        self.irreps_key = o3.Irreps(irreps_key)
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
+        self.irreps_sh = e3nn.o3.Irreps(irreps_sh)
+        self.irreps_query = e3nn.o3.Irreps(irreps_query)
+        self.irreps_key = e3nn.o3.Irreps(irreps_key)
         self.return_attention = return_attention
 
-        self.h_q = o3.Linear(irreps_in, irreps_query)
+        self.h_q = e3nn.o3.Linear(irreps_in, irreps_query)
 
         if conv is None:
             conv = Conv
@@ -89,7 +94,7 @@ class Attention(torch.nn.Module):
             edge_attr_dim=edge_attr_dim,
         )
 
-        self.dot = o3.FullyConnectedTensorProduct(irreps_query, irreps_key, "0e")
+        self.dot = e3nn.o3.FullyConnectedTensorProduct(irreps_query, irreps_key, "0e")
 
     def forward(self, node_attr, edge_index, edge_attr, edge_sh):
         """
@@ -133,7 +138,7 @@ class Attention(torch.nn.Module):
             return out
 
 
-class MultiheadAttention(torch.nn.Module):
+class MultiheadAttention(nn.Module):
     """
     Equivariant attention layer with multiple heads
 
@@ -148,8 +153,8 @@ class MultiheadAttention(torch.nn.Module):
         irreps_query: e3nn.o3.Irreps,
         irreps_key: e3nn.o3.Irreps,
         edge_attr_dim: int,
-        n_head: int,
-        conv: Optional[Callable[..., torch.nn.Module]] = None,
+        num_heads: int,
+        conv: Optional[Callable[..., nn.Module]] = None,
         return_attention: bool = False,
     ):
         """
@@ -167,32 +172,34 @@ class MultiheadAttention(torch.nn.Module):
             Attention key irreps
         edge_attr_dim: int
             Dimension of scalar edge attributes to be passed to radial_nn
-        n_head: int
+        num_heads: int
             Number of attention heads
-        conv: Optional[Callable[..., torch.nn.Module]] = None
+        conv: Optional[Callable[..., nn.Module]] = None
             Factory function for convolution layer used for computing keys and values
         return_attention: bool = False
             Whether to return attn or not
         """
         super().__init__()
 
-        self.irreps_in = o3.Irreps(irreps_in)
-        self.irreps_out = o3.Irreps(irreps_out)
-        self.irreps_sh = o3.Irreps(irreps_sh)
-        self.irreps_query = o3.Irreps(irreps_query)
-        self.irreps_key = o3.Irreps(irreps_key)
-        self.n_head = n_head
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
+        self.irreps_sh = e3nn.o3.Irreps(irreps_sh)
+        self.irreps_query = e3nn.o3.Irreps(irreps_query)
+        self.irreps_key = e3nn.o3.Irreps(irreps_key)
+        self.num_heads = num_heads
         self.return_attention = return_attention
 
-        irreps_in_split, irreps_in_per_head = split_irreps(irreps_in, n_head)
-        irreps_out_split, irreps_out_per_head = split_irreps(irreps_out, n_head)
-        irreps_query_split, irreps_query_per_head = split_irreps(irreps_query, n_head)
-        irreps_key_split, irreps_key_per_head = split_irreps(irreps_key, n_head)
+        irreps_in_split, irreps_in_per_head = split_irreps(irreps_in, num_heads)
+        irreps_out_split, irreps_out_per_head = split_irreps(irreps_out, num_heads)
+        irreps_query_split, irreps_query_per_head = split_irreps(
+            irreps_query, num_heads
+        )
+        irreps_key_split, irreps_key_per_head = split_irreps(irreps_key, num_heads)
 
         if conv is None:
             conv = Conv
 
-        self.h_q = o3.Linear(irreps_in, irreps_query_split)
+        self.h_q = e3nn.o3.Linear(irreps_in, irreps_query_split)
 
         self.h_k = conv(
             irreps_in=self.irreps_in,
@@ -207,11 +214,11 @@ class MultiheadAttention(torch.nn.Module):
             edge_attr_dim=edge_attr_dim,
         )
 
-        self.dot = o3.FullyConnectedTensorProduct(
+        self.dot = e3nn.o3.FullyConnectedTensorProduct(
             irreps_query_per_head, irreps_key_per_head, "0e"
         )
 
-        self.lin_out = o3.Linear(irreps_out_split, irreps_out)
+        self.lin_out = e3nn.o3.Linear(irreps_out_split, irreps_out)
 
     def forward(self, node_attr, edge_index, edge_attr, edge_sh):
         """
@@ -241,9 +248,9 @@ class MultiheadAttention(torch.nn.Module):
         v = self.h_v.apply_per_edge(node_attr[src], edge_attr, edge_sh)
 
         # create head index as batch-like dimension
-        q = q.view(N, self.n_head, -1)
-        k = k.view(E, self.n_head, -1)
-        v = v.view(E, self.n_head, -1)
+        q = q.view(N, self.num_heads, -1)
+        k = k.view(E, self.num_heads, -1)
+        v = v.view(E, self.num_heads, -1)
 
         # compute softmax
         exp = self.dot(q[dst], k).exp()
@@ -263,7 +270,7 @@ class MultiheadAttention(torch.nn.Module):
             return out
 
 
-class TransformerBlock(torch.nn.Module):
+class TransformerBlock(nn.Module):
     """
     Equivariant transformer block
     """
@@ -274,11 +281,11 @@ class TransformerBlock(torch.nn.Module):
         irreps_out: e3nn.o3.Irreps,
         irreps_sh: e3nn.o3.Irreps,
         edge_attr_dim: int,
-        n_head: int = 1,
+        num_heads: int = 1,
         irreps_query: Optional[e3nn.o3.Irreps] = None,
         irreps_key: Optional[e3nn.o3.Irreps] = None,
         irreps_ff_hidden_list: Optional[list[e3nn.o3.Irreps]] = None,
-        conv: Optional[Callable[..., torch.nn.Module]] = None,
+        conv: Optional[Callable[..., nn.Module]] = None,
     ):
         """
         Parameters
@@ -291,7 +298,7 @@ class TransformerBlock(torch.nn.Module):
             Edge spherical harmonic irreps
         edge_attr_dim: int
             Dimension of scalar edge attributes to be passed to radial_nn
-        n_head: int
+        num_heads: int
             Number of attention heads
         irreps_query: Optional[e3nn.o3.Irreps]
             Attention query irreps. If `None` use `irreps_in`.
@@ -301,14 +308,14 @@ class TransformerBlock(torch.nn.Module):
             list of irreps for hidden layers used in feedforward network.
             If `None` then single hidden layer with multiplicity of each irrep
             blown up 4x.
-        conv: Optional[Callable[..., torch.nn.Module]] = None
+        conv: Optional[Callable[..., nn.Module]] = None
             Factory function for convolution layer used for computing keys and values
         """
         super().__init__()
 
-        self.irreps_in = o3.Irreps(irreps_in)
-        self.irreps_out = o3.Irreps(irreps_out)
-        self.irreps_sh = o3.Irreps(irreps_sh)
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
+        self.irreps_sh = e3nn.o3.Irreps(irreps_sh)
 
         if irreps_query is None:
             irreps_query = irreps_in
@@ -317,7 +324,9 @@ class TransformerBlock(torch.nn.Module):
             irreps_key = irreps_in
 
         if irreps_ff_hidden_list is None:
-            irreps_ff_hidden = o3.Irreps([(4 * mul, ir) for mul, ir in self.irreps_out])
+            irreps_ff_hidden = e3nn.o3.Irreps(
+                [(4 * mul, ir) for mul, ir in self.irreps_out]
+            )
             irreps_ff_hidden_list = [irreps_ff_hidden]
 
         if conv is None:
@@ -330,7 +339,7 @@ class TransformerBlock(torch.nn.Module):
             irreps_query,
             irreps_key,
             edge_attr_dim,
-            n_head,
+            num_heads,
             conv=conv,
             return_attention=False,
         )

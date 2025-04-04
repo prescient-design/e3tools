@@ -1,11 +1,12 @@
 from typing import Union
 
 import e3nn
+import e3nn.o3
 import torch
-from e3nn import o3
+from torch import nn
 
 
-class SeparableTensorProduct(torch.nn.Module):
+class SeparableTensorProduct(nn.Module):
     """
     Tensor product factored into depthwise and point wise components
 
@@ -20,9 +21,9 @@ class SeparableTensorProduct(torch.nn.Module):
         irreps_out: Union[str, e3nn.o3.Irreps],
     ):
         super().__init__()
-        self.irreps_in1 = o3.Irreps(irreps_in1)
-        self.irreps_in2 = o3.Irreps(irreps_in2)
-        self.irreps_out = o3.Irreps(irreps_out)
+        self.irreps_in1 = e3nn.o3.Irreps(irreps_in1)
+        self.irreps_in2 = e3nn.o3.Irreps(irreps_in2)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
 
         irreps_out_dtp = []
         instructions_dtp = []
@@ -30,15 +31,15 @@ class SeparableTensorProduct(torch.nn.Module):
         for i, (mul, ir_in1) in enumerate(self.irreps_in1):
             for j, (_, ir_in2) in enumerate(self.irreps_in2):
                 for ir_out in ir_in1 * ir_in2:
-                    if ir_out in self.irreps_out or ir_out == o3.Irrep(0, 1):
+                    if ir_out in self.irreps_out or ir_out == e3nn.o3.Irrep(0, 1):
                         k = len(irreps_out_dtp)
                         irreps_out_dtp.append((mul, ir_out))
                         instructions_dtp.append((i, j, k, "uvu", True))
 
-        irreps_out_dtp = o3.Irreps(irreps_out_dtp)
+        irreps_out_dtp = e3nn.o3.Irreps(irreps_out_dtp)
 
         # depth wise
-        self.dtp = o3.TensorProduct(
+        self.dtp = e3nn.o3.TensorProduct(
             irreps_in1,
             irreps_in2,
             irreps_out_dtp,
@@ -48,7 +49,7 @@ class SeparableTensorProduct(torch.nn.Module):
         )
 
         # point wise
-        self.lin = o3.Linear(irreps_out_dtp, self.irreps_out)
+        self.lin = e3nn.o3.Linear(irreps_out_dtp, self.irreps_out)
 
         self.weight_numel = self.dtp.weight_numel
 
@@ -58,7 +59,7 @@ class SeparableTensorProduct(torch.nn.Module):
         return out
 
 
-class ExperimentalTensorProduct(torch.nn.Module):
+class ExperimentalTensorProduct(nn.Module):
     """
     Compileable tensor product
     """
@@ -70,13 +71,13 @@ class ExperimentalTensorProduct(torch.nn.Module):
         irreps_out: Union[str, e3nn.o3.Irreps],
     ):
         super().__init__()
-        self.irreps_in1 = o3.Irreps(irreps_in1)
-        self.irreps_in2 = o3.Irreps(irreps_in2)
-        self.irreps_out = o3.Irreps(irreps_out)
+        self.irreps_in1 = e3nn.o3.Irreps(irreps_in1)
+        self.irreps_in2 = e3nn.o3.Irreps(irreps_in2)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
 
-        self.tp = o3.FullTensorProductv2(self.irreps_in1, self.irreps_in2)
+        self.tp = e3nn.o3.FullTensorProductv2(self.irreps_in1, self.irreps_in2)
 
-        self.lin = o3.Linear(
+        self.lin = e3nn.o3.Linear(
             self.tp.irreps_out,
             self.irreps_out,
             internal_weights=False,

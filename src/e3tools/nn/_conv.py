@@ -2,8 +2,9 @@ import functools
 from typing import Callable, Mapping, Optional, Union
 
 import e3nn
+import e3nn.o3
 import torch
-from e3nn import o3
+from torch import nn
 
 from e3tools import scatter
 
@@ -13,7 +14,7 @@ from ._mlp import ScalarMLP
 from ._tensor_product import ExperimentalTensorProduct, SeparableTensorProduct
 
 
-class Conv(torch.nn.Module):
+class Conv(nn.Module):
     """
     Equivariant convolution layer
 
@@ -26,8 +27,8 @@ class Conv(torch.nn.Module):
         irreps_out: Union[str, e3nn.o3.Irreps],
         irreps_sh: Union[str, e3nn.o3.Irreps],
         edge_attr_dim: int,
-        radial_nn: Optional[Callable[..., torch.nn.Module]] = None,
-        tensor_product: Optional[Callable[..., torch.nn.Module]] = None,
+        radial_nn: Optional[Callable[..., nn.Module]] = None,
+        tensor_product: Optional[Callable[..., nn.Module]] = None,
     ):
         """
         Parameters
@@ -40,7 +41,7 @@ class Conv(torch.nn.Module):
             Edge spherical harmonic irreps
         edge_attr_dim: int
             Dimension of scalar edge attributes to be passed to radial_nn
-        radial_nn: Optional[Callable[..., torch.nn.Module]]
+        radial_nn: Optional[Callable[..., nn.Module]]
             Factory function for radial nn used to generate tensor product weights.
             Should be callable as radial_nn(in_features, out_features)
             if `None` then
@@ -48,11 +49,11 @@ class Conv(torch.nn.Module):
                 functools.partial(
                     e3tools.nn.ScalarMLP,
                     hidden_features=[edge_attr_dim],
-                    activation_layer=torch.nn.SiLU,
+                    activation_layer=nn.SiLU,
                 )
                 ```
             is used.
-        tensor_product: Optional[Callable[..., torch.nn.Module]]
+        tensor_product: Optional[Callable[..., nn.Module]]
             Factory function for tensor product used to mix input node
             representations with edge spherical harmonics.
             Should be callable as `tensor_product(irreps_in, irreps_sh, irreps_out)`
@@ -70,13 +71,13 @@ class Conv(torch.nn.Module):
 
         super().__init__()
 
-        self.irreps_in = o3.Irreps(irreps_in)
-        self.irreps_out = o3.Irreps(irreps_out)
-        self.irreps_sh = o3.Irreps(irreps_sh)
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
+        self.irreps_sh = e3nn.o3.Irreps(irreps_sh)
 
         if tensor_product is None:
             tensor_product = functools.partial(
-                o3.FullyConnectedTensorProduct,
+                e3nn.o3.FullyConnectedTensorProduct,
                 shared_weights=False,
                 internal_weights=False,
             )
@@ -86,7 +87,7 @@ class Conv(torch.nn.Module):
             radial_nn = functools.partial(
                 ScalarMLP,
                 hidden_features=[edge_attr_dim],
-                activation_layer=torch.nn.SiLU,
+                activation_layer=nn.SiLU,
             )
 
         self.radial_nn = radial_nn(edge_attr_dim, self.tp.weight_numel)
@@ -145,7 +146,7 @@ class ExperimentalConv(Conv):
         )
 
 
-class ConvBlock(torch.nn.Module):
+class ConvBlock(nn.Module):
     """
     Equivariant convolution with gated non-linearity and linear self-interaction
     """
@@ -156,9 +157,9 @@ class ConvBlock(torch.nn.Module):
         irreps_out: Union[str, e3nn.o3.Irreps],
         irreps_sh: Union[str, e3nn.o3.Irreps],
         edge_attr_dim: int,
-        act: Optional[Mapping[int, torch.nn.Module]] = None,
-        act_gates: Optional[Mapping[int, torch.nn.Module]] = None,
-        conv: Optional[Callable[..., torch.nn.Module]] = None,
+        act: Optional[Mapping[int, nn.Module]] = None,
+        act_gates: Optional[Mapping[int, nn.Module]] = None,
+        conv: Optional[Callable[..., nn.Module]] = None,
     ):
         """
         Parameters
@@ -171,21 +172,21 @@ class ConvBlock(torch.nn.Module):
             Edge spherical harmonic irreps
         edge_attr_dim: int
             Dimension of scalar edge attributes to be passed to radial_nn
-        act: Mapping[int, torch.nn.Module]
+        act: Mapping[int, nn.Module]
             Mapping from parity to activation module.
-            If `None` defaults to `{1 : torch.nn.LeakyReLU(), -1: torch.nn.Tanh()}`
-        act_gates: Mapping[int, torch.nn.Module]
+            If `None` defaults to `{1 : nn.LeakyReLU(), -1: nn.Tanh()}`
+        act_gates: Mapping[int, nn.Module]
             Mapping from parity to activation module.
-            If `None` defaults to `{1 : torch.nn.Sigmoid(), -1: torch.nn.Tanh()}`
-        conv: Optional[Callable[..., torch.nn.Module]] = None
+            If `None` defaults to `{1 : nn.Sigmoid(), -1: nn.Tanh()}`
+        conv: Optional[Callable[..., nn.Module]] = None
             Factory function for convolution layer used for computing keys and values
         """
 
         super().__init__()
 
-        self.irreps_in = o3.Irreps(irreps_in)
-        self.irreps_out = o3.Irreps(irreps_out)
-        self.irreps_sh = o3.Irreps(irreps_sh)
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
+        self.irreps_sh = e3nn.o3.Irreps(irreps_sh)
 
         if conv is None:
             conv = Conv
@@ -204,7 +205,13 @@ class ConvBlock(torch.nn.Module):
             )
         )
 
-    def forward(self, node_attr, edge_index, edge_attr, edge_sh):
+    def forward(
+        self,
+        node_attr: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_attr: torch.Tensor,
+        edge_sh: torch.Tensor,
+    ) -> torch.Tensor:
         """
         Computes the forward pass of the equivariant graph attention
 

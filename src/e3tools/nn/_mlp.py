@@ -1,13 +1,14 @@
 from typing import Callable, Mapping, Optional
 
 import e3nn
-from e3nn import o3
+import e3nn.o3
 import torch
+from torch import nn
 
 from ._gate import Gate
 
 
-class ScalarMLP(torch.nn.Sequential):
+class ScalarMLP(nn.Sequential):
     """A multi-layer perceptron for scalar inputs and outputs."""
 
     def __init__(
@@ -15,28 +16,28 @@ class ScalarMLP(torch.nn.Sequential):
         in_features: int,
         out_features: int,
         hidden_features: list[int],
-        activation_layer: Callable[..., torch.nn.Module] = torch.nn.ReLU,
-        norm_layer: Optional[Callable[..., torch.nn.Module]] = None,
+        activation_layer: Callable[..., nn.Module] = nn.ReLU,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
         dropout=0.0,
         bias=True,
     ):
         layers = []
         in_dim = in_features
         for hidden_dim in hidden_features:
-            layers.append(torch.nn.Linear(in_dim, hidden_dim, bias=bias))
+            layers.append(nn.Linear(in_dim, hidden_dim, bias=bias))
             if norm_layer is not None:
                 layers.append(norm_layer(hidden_dim))
             layers.append(activation_layer())
-            layers.append(torch.nn.Dropout(dropout))
+            layers.append(nn.Dropout(dropout))
             in_dim = hidden_dim
 
-        layers.append(torch.nn.Linear(in_dim, out_features, bias=bias))
-        layers.append(torch.nn.Dropout(dropout))
+        layers.append(nn.Linear(in_dim, out_features, bias=bias))
+        layers.append(nn.Dropout(dropout))
 
         super().__init__(*layers)
 
 
-class EquivariantMLPBlock(torch.nn.Module):
+class EquivariantMLPBlock(nn.Module):
     """
     Equivariant linear layer followed by optional norm and gated non-linearity
     """
@@ -45,9 +46,9 @@ class EquivariantMLPBlock(torch.nn.Module):
         self,
         irreps_in: e3nn.o3.Irreps,
         irreps_out: e3nn.o3.Irreps,
-        act: Optional[Mapping[int, torch.nn.Module]] = None,
-        act_gates: Optional[Mapping[int, torch.nn.Module]] = None,
-        norm_layer: Optional[Callable[..., torch.nn.Module]] = None,
+        act: Optional[Mapping[int, nn.Module]] = None,
+        act_gates: Optional[Mapping[int, nn.Module]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
     ):
         """
         Parameters
@@ -56,19 +57,19 @@ class EquivariantMLPBlock(torch.nn.Module):
             Input irreps
         irreps_out: e3nn.o3.Irreps
             Output irreps
-        act: Optional[Mapping[int, torch.nn.Module]]
+        act: Optional[Mapping[int, nn.Module]]
             Mapping from parity to activation module.
-            If `None` defaults to `{1 : torch.nn.LeakyReLU(), -1: torch.nn.Tanh()}`
-        act_gates: Optional[Mapping[int, torch.nn.Module]]
+            If `None` defaults to `{1 : nn.LeakyReLU(), -1: nn.Tanh()}`
+        act_gates: Optional[Mapping[int, nn.Module]]
             Mapping from parity to activation module.
-            If `None` defaults to `{1 : torch.nn.Sigmoid(), -1: torch.nn.Tanh()}`
+            If `None` defaults to `{1 : nn.Sigmoid(), -1: nn.Tanh()}`
         """
         super().__init__()
-        self.irreps_in = o3.Irreps(irreps_in)
-        self.irreps_out = o3.Irreps(irreps_out)
+        self.irreps_in = e3nn.o3.Irreps(irreps_in)
+        self.irreps_out = e3nn.o3.Irreps(irreps_out)
 
         self.gate = Gate(self.irreps_out, act=act, act_gates=act_gates)
-        self.lin = o3.Linear(self.irreps_in, self.gate.irreps_in)
+        self.lin = e3nn.o3.Linear(self.irreps_in, self.gate.irreps_in)
 
         if norm_layer:
             self.norm = norm_layer(self.lin.irreps_out)
@@ -83,7 +84,7 @@ class EquivariantMLPBlock(torch.nn.Module):
         return x
 
 
-class EquivariantMLP(torch.nn.Sequential):
+class EquivariantMLP(nn.Sequential):
     """An equivariant multi-layer perceptron with gated non-linearities."""
 
     def __init__(
@@ -91,9 +92,9 @@ class EquivariantMLP(torch.nn.Sequential):
         irreps_in: e3nn.o3.Irreps,
         irreps_out: e3nn.o3.Irreps,
         irreps_hidden_list: list[e3nn.o3.Irreps],
-        act: Optional[Mapping[int, torch.nn.Module]] = None,
-        act_gates: Optional[Mapping[int, torch.nn.Module]] = None,
-        norm_layer: Optional[Callable[..., torch.nn.Module]] = None,
+        act: Optional[Mapping[int, nn.Module]] = None,
+        act_gates: Optional[Mapping[int, nn.Module]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
     ):
         layers = []
 
@@ -110,7 +111,7 @@ class EquivariantMLP(torch.nn.Sequential):
             )
             irreps = irreps_hidden
 
-        layers.append(o3.Linear(irreps, irreps_out))
+        layers.append(e3nn.o3.Linear(irreps, irreps_out))
 
         super().__init__(*layers)
 

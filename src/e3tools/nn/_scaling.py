@@ -1,8 +1,10 @@
-import torch
 import e3nn
+import e3nn.o3
+import torch
+from torch import nn
 
 
-class ScaleIrreps(torch.nn.Module):
+class ScaleIrreps(nn.Module):
     """Scales each irrep by a weight."""
 
     def __init__(self, irreps_in: torch.Tensor):

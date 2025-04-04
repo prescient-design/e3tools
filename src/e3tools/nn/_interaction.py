@@ -1,14 +1,16 @@
+import e3nn
+import e3nn.o3
 import torch
-from e3nn import o3
+from torch import nn
 
 
-class LinearSelfInteraction(torch.nn.Module):
+class LinearSelfInteraction(nn.Module):
     """
     Equivariant linear self interaction layer
 
     Parameters
     ----------
-    f: torch.nn.Module
+    f: nn.Module
         Equivariant layer to wrap.
         f.irreps_in and f.irreps_out must be defined
     """
@@ -20,8 +22,8 @@ class LinearSelfInteraction(torch.nn.Module):
         self.irreps_in = f.irreps_in
         self.irreps_out = f.irreps_out
 
-        self.skip_connection = o3.Linear(self.irreps_in, self.irreps_out)
-        self.self_interaction = o3.Linear(self.irreps_out, self.irreps_out)
+        self.skip_connection = e3nn.o3.Linear(self.irreps_in, self.irreps_out)
+        self.self_interaction = e3nn.o3.Linear(self.irreps_out, self.irreps_out)
 
     def forward(self, x: torch.Tensor, *args) -> torch.Tensor:
         """Combines the input layer with a skip connection."""

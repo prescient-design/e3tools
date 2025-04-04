@@ -1,7 +1,9 @@
 from typing import Iterator, Tuple
 
+import e3nn
 import e3nn.o3
 import torch
+from torch import nn
 
 from e3tools import pack_irreps, unpack_irreps
 
@@ -57,7 +59,7 @@ def axis_to_mul(
     return x_multiplied, irreps_multiplied
 
 
-class MulToAxis(torch.nn.Module):
+class MulToAxis(nn.Module):
     """Adds a new axis by factoring out irreps. Compatible with torch.compile."""
 
     def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):
@@ -143,7 +145,7 @@ class MulToAxis(torch.nn.Module):
         return torch.cat(output_list, dim=-1)
 
 
-class AxisToMul(torch.nn.Module):
+class AxisToMul(nn.Module):
     """Collapses the second-last axis by flattening the irreps. Compatible with torch.compile."""
 
     def __init__(self, irreps_in: e3nn.o3.Irreps, factor: int):

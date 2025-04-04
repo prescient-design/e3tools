@@ -5,11 +5,11 @@ import torch
 import torch.nn as nn
 from e3nn import o3
 
-from e3tools.nn import ConvBlock, EquivariantMLP
+from e3tools.nn import TransformerBlock, EquivariantMLP
 
 
-class E3Conv(nn.Module):
-    """A simple E(3)-equivariant convolutional neural network, similar to NequIP."""
+class E3Transformer(nn.Module):
+    """A simple E(3)-equivariant transformer, similar to NequIP."""
 
     def __init__(
         self,
@@ -21,6 +21,7 @@ class E3Conv(nn.Module):
         atom_type_embedding_dim: int,
         num_atom_types: int,
         max_radius: float,
+        num_attention_heads: int,
     ):
         super().__init__()
 
@@ -30,6 +31,7 @@ class E3Conv(nn.Module):
         self.num_layers = num_layers
         self.edge_attr_dim = edge_attr_dim
         self.max_radius = max_radius
+        self.num_attention_heads = num_attention_heads
 
         self.sh = o3.SphericalHarmonics(
             irreps_out=self.irreps_sh, normalize=True, normalization="component"
@@ -51,11 +53,12 @@ class E3Conv(nn.Module):
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
             self.layers.append(
-                ConvBlock(
+                TransformerBlock(
                     irreps_in=self.irreps_hidden,
                     irreps_out=self.irreps_hidden,
                     irreps_sh=self.irreps_sh,
                     edge_attr_dim=self.edge_attr_dim,
+                    num_heads=self.num_attention_heads,
                 )
             )
         self.output_head = EquivariantMLP(

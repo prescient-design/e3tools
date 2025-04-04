@@ -1,13 +1,13 @@
 import e3nn
+import e3nn.o3
 import torch
+from torch import nn
 import torch.nn.functional as F
-from e3nn import o3
 
 
-class LayerNorm(torch.nn.Module):
+class LayerNorm(nn.Module):
     """
     Equivariant layer normalization compatible with torch.compile.
-
     Each irrep is normalized independently.
 
     ref: https://github.com/atomicarchitects/equiformer/blob/master/nets/fast_layer_norm.py
@@ -23,8 +23,8 @@ class LayerNorm(torch.nn.Module):
             softening factor
         """
         super().__init__()
-        self.irreps_in = o3.Irreps(irreps)
-        self.irreps_out = o3.Irreps(irreps)
+        self.irreps_in = e3nn.o3.Irreps(irreps)
+        self.irreps_out = e3nn.o3.Irreps(irreps)
         self.eps = eps
         self.irreps_in_dim = self.irreps_in.dim
 
@@ -110,7 +110,7 @@ class LayerNorm(torch.nn.Module):
             # Extract the field for this irrep
             field = x.narrow(-1, start_idx, size)
 
-            # Reshape to [flat_batch_size, mul, dim]
+            # Reshape to [*batch_dims, mul, dim]
             # Using view instead of reshape for better traceability
             field_view = field.view(*batch_dims, mul, dim)
 
@@ -122,16 +122,14 @@ class LayerNorm(torch.nn.Module):
             else:
                 # For non-scalar irreps, normalize by the L2 norm
                 # Compute squared L2 norm along the last dimension
-                norm2 = torch.sum(field_view.pow(2), dim=-1)  # [flat_batch_size, mul]
+                norm2 = torch.sum(field_view.pow(2), dim=-1)  # [*batch_dims, mul]
 
                 # Compute RMS of the norm across multiplicity
-                mean_norm2 = torch.mean(
-                    norm2, dim=-1, keepdim=True
-                )  # [flat_batch_size, 1]
-                field_norm = torch.rsqrt(mean_norm2 + self.eps)  # [flat_batch_size, 1]
+                mean_norm2 = torch.mean(norm2, dim=-1, keepdim=True)  # [*batch_dims, 1]
+                field_norm = torch.rsqrt(mean_norm2 + self.eps)  # [*batch_dims, 1]
 
                 # Add an extra dimension for broadcasting
-                field_norm = field_norm.unsqueeze(-1)  # [flat_batch_size, 1, 1]
+                field_norm = field_norm.unsqueeze(-1)  # [*batch_dims, 1, 1]
 
                 # Apply normalization
                 field_norm = field_view * field_norm

@@ -1,9 +1,11 @@
-import torch
+import e3nn
 import e3nn.o3
+import torch
+from torch import nn
 
 
-class ExtractIrreps(torch.nn.Module):
-    """Extracts specific irreps from a e3nn tensor."""
+class ExtractIrreps(nn.Module):
+    """Extracts specific irreps from a tensor."""
 
     def __init__(self, irreps_in: e3nn.o3.Irreps, irrep_extract: e3nn.o3.Irrep):
         super().__init__()
