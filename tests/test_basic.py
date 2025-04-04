@@ -1,3 +1,4 @@
+from typing import Tuple
 import functools
 
 import pytest
@@ -23,7 +24,8 @@ torch.set_default_dtype(torch.float64)
 CONV_LAYERS = [Conv, SeparableConv, ExperimentalConv]
 
 
-def apply_layer_rot(layer):
+def apply_layer_rotation(layer: torch.nn.Module) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Applies a rotation and returns the output of the layer with the rotation applied before and after."""
     N = 20
     edge_attr_dim = 10
     max_radius = 1.3
@@ -43,11 +45,11 @@ def apply_layer_rot(layer):
         cutoff=True,
     )
 
-    edge_sh = o3.spherical_harmonics(
+    edge_sh = e3nn.o3.spherical_harmonics(
         layer.irreps_sh, edge_vec, True, normalization="component"
     )
 
-    rot = o3.rand_matrix()
+    rot = e3nn.o3.rand_matrix()
 
     D_node_attr = layer.irreps_in.D_from_matrix(rot)
     D_edge_sh = layer.irreps_sh.D_from_matrix(rot)
@@ -64,19 +66,19 @@ def apply_layer_rot(layer):
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_conv(conv):
-    irreps_in = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
     irreps_sh = irreps_in.spherical_harmonics(2)
     edge_attr_dim = 10
 
     layer = conv(irreps_in, irreps_in, irreps_sh, edge_attr_dim=edge_attr_dim)
 
-    out_1, out_2 = apply_layer_rot(layer)
+    out_1, out_2 = apply_layer_rotation(layer)
     assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_gated_conv(conv):
-    irreps_in = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
     irreps_sh = irreps_in.spherical_harmonics(2)
     edge_attr_dim = 10
 
@@ -84,13 +86,13 @@ def test_gated_conv(conv):
 
     layer = Gated(wrapped, irreps_in=irreps_in, irreps_out=irreps_in)
 
-    out_1, out_2 = apply_layer_rot(layer)
+    out_1, out_2 = apply_layer_rotation(layer)
     assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_conv_block(conv):
-    irreps_in = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
     irreps_sh = irreps_in.spherical_harmonics(2)
     edge_attr_dim = 10
 
@@ -102,13 +104,13 @@ def test_conv_block(conv):
         conv=conv,
     )
 
-    out_1, out_2 = apply_layer_rot(layer)
+    out_1, out_2 = apply_layer_rotation(layer)
     assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_attention(conv):
-    irreps_in = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
     irreps_out = irreps_in
     irreps_sh = irreps_in.spherical_harmonics(2)
     irreps_key = irreps_in
@@ -125,13 +127,13 @@ def test_attention(conv):
         conv=conv,
     )
 
-    out_1, out_2 = apply_layer_rot(layer)
+    out_1, out_2 = apply_layer_rotation(layer)
     assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", [Conv, SeparableConv])
 def test_multihead_attention(conv):
-    irreps_in = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
     irreps_out = irreps_in
     irreps_sh = irreps_in.spherical_harmonics(2)
     irreps_key = irreps_in
@@ -150,15 +152,15 @@ def test_multihead_attention(conv):
         conv=conv,
     )
 
-    out_1, out_2 = apply_layer_rot(layer)
+    out_1, out_2 = apply_layer_rotation(layer)
     assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 def test_layer_norm():
-    irreps = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
 
     layer = LayerNorm(irreps)
-    rot = o3.rand_matrix()
+    rot = e3nn.o3.rand_matrix()
     D = irreps.D_from_matrix(rot)
 
     x = irreps.randn(10, -1)
@@ -170,14 +172,14 @@ def test_layer_norm():
 
 
 def test_equivariant_mlp():
-    irreps = o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_hidden = o3.Irreps([(4 * mul, ir) for mul, ir in irreps])
+    irreps = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_hidden = e3nn.o3.Irreps([(4 * mul, ir) for mul, ir in irreps])
 
     layer = EquivariantMLP(
         irreps, irreps, [irreps_hidden, irreps_hidden], norm_layer=LayerNorm
     )
 
-    rot = o3.rand_matrix()
+    rot = e3nn.o3.rand_matrix()
     D = irreps.D_from_matrix(rot)
 
     x = irreps.randn(10, -1)
@@ -189,7 +191,7 @@ def test_equivariant_mlp():
 
 
 def test_transformer():
-    irreps_in = o3.Irreps("10x0e + 10x1o + 10x2e")
+    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
     irreps_out = irreps_in
     irreps_sh = irreps_in.spherical_harmonics(2)
     edge_attr_dim = 10
@@ -203,5 +205,5 @@ def test_transformer():
         n_head=n_head,
     )
 
-    out_1, out_2 = apply_layer_rot(layer)
+    out_1, out_2 = apply_layer_rotation(layer)
     assert torch.allclose(out_1, out_2, atol=1e-10)
