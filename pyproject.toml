@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "e3nn>=0.5.5",
     "jaxtyping>=0.2.38",
-    "torch>=2.4.1",
+    "torch>=2.5.1",
     "setuptools>=78.1.0",
 ]
 
