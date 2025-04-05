@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Kleinhenz
+    given-names: Joseph
+    orcid: https://orcid.org/0000-0003-3670-0431
+  - family-names: Daigavane
+    given-names: Ameya
+    orcid: https://orcid.org/0000-0002-5116-3075
+title: "e3tools"
+version: 0.1.1
+date-released: 2025-04-04
