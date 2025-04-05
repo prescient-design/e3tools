@@ -138,7 +138,7 @@ def test_multihead_attention(conv):
     irreps_key = irreps_in
     irreps_query = irreps_in
     edge_attr_dim = 10
-    n_head = 2
+    num_heads = 2
 
     layer = MultiheadAttention(
         irreps_in,
@@ -147,7 +147,7 @@ def test_multihead_attention(conv):
         irreps_query,
         irreps_key,
         edge_attr_dim,
-        n_head,
+        num_heads,
         conv=conv,
     )
 
@@ -194,14 +194,14 @@ def test_transformer():
     irreps_out = irreps_in
     irreps_sh = irreps_in.spherical_harmonics(2)
     edge_attr_dim = 10
-    n_head = 2
+    num_heads = 2
 
     layer = TransformerBlock(
         irreps_in=irreps_in,
         irreps_out=irreps_out,
         irreps_sh=irreps_sh,
         edge_attr_dim=edge_attr_dim,
-        n_head=n_head,
+        num_heads=num_heads,
     )
 
     out_1, out_2 = apply_layer_rotation(layer)
