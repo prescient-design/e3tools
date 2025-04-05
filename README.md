@@ -26,5 +26,7 @@ pip install git+https://github.com/prescient-design/e3tools.git
 
 ## Examples
 
-See [examples/e3conv.py](https://github.com/prescient-design/e3tools/blob/main/examples/e3conv.py) for an example
-of a simple E(3)-equivariant message passing network built with `e3tools`.
+See [examples/models/conv.py](https://github.com/prescient-design/e3tools/blob/main/examples/models/conv.py) and [examples/models/transformer.py](https://github.com/prescient-design/e3tools/blob/main/examples/models/conv.py) for examples of E(3)-equivariant message passing networks built with `e3tools`. We also provide an [example training script on QM9](https://github.com/prescient-design/e3tools/blob/main/examples/train_qm9.py):
+```bash
+python examples/train_qm9.py --model conv
+```

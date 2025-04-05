@@ -5,7 +5,8 @@ import torch
 import torch.nn as nn
 from e3nn import o3
 
-from e3tools.nn import TransformerBlock, EquivariantMLP
+import e3tools
+import e3tools.nn
 
 
 class E3Transformer(nn.Module):
@@ -53,7 +54,7 @@ class E3Transformer(nn.Module):
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
             self.layers.append(
-                TransformerBlock(
+                e3tools.nn.TransformerBlock(
                     irreps_in=self.irreps_hidden,
                     irreps_out=self.irreps_hidden,
                     irreps_sh=self.irreps_sh,
@@ -61,8 +62,10 @@ class E3Transformer(nn.Module):
                     num_heads=self.num_attention_heads,
                 )
             )
-        self.output_head = EquivariantMLP(
-            irreps_in=self.irreps_hidden, irreps_out=self.irreps_out
+        self.output_head = e3tools.nn.EquivariantMLP(
+            irreps_in=self.irreps_hidden,
+            irreps_out=self.irreps_out,
+            irreps_hidden_list=[self.irreps_hidden],
         )
 
     def forward(
@@ -92,13 +95,18 @@ class E3Transformer(nn.Module):
         edge_attr = torch.cat((bonded_edge_attr, radial_edge_attr), dim=-1)
 
         # Compute node attributes.
-        node_attr = self.atom_embedder(data)
+        node_attr = self.atom_embedder(data["z"])
         node_attr = self.initial_linear(node_attr)
 
         # Perform message passing.
         for layer in self.layers:
             node_attr = layer(node_attr, edge_index, edge_attr, edge_sh)
-        node_attr = self.output_head(node_attr)
 
-        data["pred"] = node_attr
-        return data
+        # Pool over nodes.
+        global_attr = e3tools.scatter(
+            node_attr,
+            index=data["batch"],
+            dim=0,
+            dim_size=data.num_graphs,
+        )
+        return self.output_head(global_attr)
