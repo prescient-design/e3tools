@@ -2,7 +2,6 @@ from typing import Callable, Mapping, Optional
 
 import e3nn
 import e3nn.o3
-import torch
 from torch import nn
 
 from ._gate import Gate

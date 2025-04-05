@@ -4,7 +4,6 @@ import functools
 import pytest
 import torch
 import e3nn
-from e3nn import o3
 from e3tools.nn import (
     Attention,
     Conv,

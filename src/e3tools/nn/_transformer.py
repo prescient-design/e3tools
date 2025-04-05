@@ -3,7 +3,6 @@ import itertools
 
 import e3nn
 import e3nn.o3
-import torch
 from torch import nn
 
 from e3tools import scatter
