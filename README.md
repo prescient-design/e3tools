@@ -9,7 +9,7 @@ A repository of building blocks in PyTorch 2.0 for E(3)/SE(3)-equivariant neural
 - Extracting Irreps: [`e3tools.nn.ExtractIrreps`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_extract_irreps.py#L5)
 - Self-Interactions: [`e3tools.nn.LinearSelfInteraction`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_interaction.py#L5)
 
-All modules are compatible with PyTorch 2.0's `torch.compile` for JIT compilation.
+All modules are compatible with `torch.compile` for JIT compilation.
 
 ## Installation
 
