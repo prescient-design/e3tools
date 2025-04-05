@@ -9,7 +9,7 @@ A repository of building blocks in PyTorch for E(3)/SE(3)-equivariant neural net
 - Extracting Irreps: [`e3tools.nn.ExtractIrreps`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_extract_irreps.py#L5)
 - Self-Interactions: [`e3tools.nn.LinearSelfInteraction`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_interaction.py#L5)
 
-All modules are compatible with PyTorch 2.0's `torch.compile` for JIT compilation!
+All modules are compatible with PyTorch 2.0's `torch.compile` for JIT compilation.
 
 ## Installation
 
@@ -30,3 +30,5 @@ We provide examples of a [convolution-based](https://github.com/prescient-design
 ```bash
 python examples/train_qm9.py --model conv
 ```
+
+We see an approximate 2.5x improvement in training speed with `torch.compile`.
