@@ -81,6 +81,7 @@ def radius_graph(
     chunk_size: int | None = None,
     loop: bool = False,
 ) -> Int64[Tensor, "2 E"]:
+    """Returns the edge index given by applying a radial cutoff of r to x."""
     return radius(
         x, x, r, batch, batch, ignore_same_index=not loop, chunk_size=chunk_size
     )
