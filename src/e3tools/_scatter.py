@@ -1,8 +1,8 @@
 import torch
-from torch import Tensor
 
 
-def broadcast(src: Tensor, other: Tensor, dim: int):
+def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int) -> torch.Tensor:
+    """Broadcasts `src` to match `other`."""
     if dim < 0:
         dim = other.dim() + dim
     if src.dim() == 1:
@@ -14,7 +14,8 @@ def broadcast(src: Tensor, other: Tensor, dim: int):
     return src
 
 
-def scatter(src, index, dim, dim_size: int | None = None, reduce="sum"):
+def scatter(src: torch.Tensor, index: torch.Tensor, dim: int, dim_size: int | None = None, reduce: str = "sum") -> torch.Tensor:
+    """Collects elements at the indices `index` of a source tensor `src`."""
     in_shape = src.shape
 
     if dim < 0:
