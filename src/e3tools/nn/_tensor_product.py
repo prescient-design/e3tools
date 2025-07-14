@@ -7,7 +7,7 @@ from torch import nn
 
 class SeparableTensorProduct(nn.Module):
     """
-    Tensor product factored into depthwise and point wise components
+    Tensor product factored into depthwise and pointwise components
 
     ref: https://arxiv.org/abs/2206.11990
     ref: https://github.com/atomicarchitects/equiformer/blob/a4360ada2d213ba7b4d884335d3dc54a92b7a371/nets/graph_attention_transformer.py#L157
