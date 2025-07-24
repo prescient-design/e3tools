@@ -229,3 +229,20 @@ class ConvBlock(nn.Module):
         out: [N, irreps_out.dim]
         """
         return self.gated_conv(node_attr, edge_index, edge_attr, edge_sh)
+
+
+class SeparableConvBlock(ConvBlock):
+    """e3tools.nn.ConvBlock with SeparableConv as the underlying convolution layer."""
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the SeparableConvBlock.
+
+        All arguments are passed directly to the parent ConvBlock,
+        with the 'conv' argument specifically set to SeparableConv.
+        """
+        super().__init__(
+            *args,
+            **kwargs,
+            conv=SeparableConv,  # Explicitly set the convolution type to SeparableConv
+        )
