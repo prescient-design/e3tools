@@ -14,7 +14,13 @@ def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int) -> torch.Tensor:
     return src
 
 
-def scatter(src: torch.Tensor, index: torch.Tensor, dim: int, dim_size: int | None = None, reduce: str = "sum") -> torch.Tensor:
+def scatter(
+    src: torch.Tensor,
+    index: torch.Tensor,
+    dim: int,
+    dim_size: int | None = None,
+    reduce: str = "sum",
+) -> torch.Tensor:
     """Collects elements at the indices `index` of a source tensor `src`."""
     in_shape = src.shape
 
