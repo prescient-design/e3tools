@@ -126,7 +126,6 @@ class Attention(nn.Module):
         # compute softmax
         alpha = self.dot(q[dst], k)
         alpha = scatter_softmax(alpha, dst, dim=0, dim_size=N)
-        alpha = alpha.relu().sqrt()
 
         out = scatter(alpha * v, dst, dim=0, dim_size=N, reduce="sum")
 
@@ -252,7 +251,6 @@ class MultiheadAttention(nn.Module):
 
         alpha = self.dot(q[dst], k)
         alpha = scatter_softmax(alpha, dst, dim=0, dim_size=N)
-        alpha = alpha.relu().sqrt()
         out = scatter(alpha * v, dst, dim=0, dim_size=N, reduce="sum").view(N, -1)
 
         # use linear layer to transform back into original irreps
