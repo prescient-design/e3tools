@@ -49,6 +49,8 @@ def scatter(
 def scatter_softmax(
     src: torch.Tensor, index: torch.Tensor, dim: int, dim_size: int | None = None
 ):
+    index = broadcast(index, src, dim)
+
     max = scatter(src, index, dim, dim_size, reduce="amax")
     max = torch.gather(input=max, dim=dim, index=index)
 
