@@ -47,7 +47,7 @@ class E3Transformer(nn.Module):
             num_embeddings=num_atom_types,
             embedding_dim=atom_type_embedding_dim,
         )
-        self.initial_linear = o3.Linear(
+        self.initial_linear = e3tools.nn.Linear(
             f"{atom_type_embedding_dim}x0e", self.irreps_hidden
         )
 

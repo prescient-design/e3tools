@@ -5,6 +5,7 @@ import e3nn.o3
 from torch import nn
 
 from ._gate import Gate
+from ._linear import Linear
 
 
 class ScalarMLP(nn.Sequential):
@@ -68,7 +69,7 @@ class EquivariantMLPBlock(nn.Module):
         self.irreps_out = e3nn.o3.Irreps(irreps_out)
 
         self.gate = Gate(self.irreps_out, act=act, act_gates=act_gates)
-        self.lin = e3nn.o3.Linear(self.irreps_in, self.gate.irreps_in)
+        self.lin = Linear(self.irreps_in, self.gate.irreps_in)
 
         if norm_layer:
             self.norm = norm_layer(self.lin.irreps_out)
@@ -110,7 +111,7 @@ class EquivariantMLP(nn.Sequential):
             )
             irreps = irreps_hidden
 
-        layers.append(e3nn.o3.Linear(irreps, irreps_out))
+        layers.append(Linear(irreps, irreps_out))
 
         super().__init__(*layers)
 

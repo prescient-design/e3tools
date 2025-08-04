@@ -4,6 +4,9 @@ import torch
 from torch import nn
 
 
+from ._linear import Linear
+
+
 class LinearSelfInteraction(nn.Module):
     """
     Equivariant linear self interaction layer
@@ -22,8 +25,8 @@ class LinearSelfInteraction(nn.Module):
         self.irreps_in = f.irreps_in
         self.irreps_out = f.irreps_out
 
-        self.skip_connection = e3nn.o3.Linear(self.irreps_in, self.irreps_out)
-        self.self_interaction = e3nn.o3.Linear(self.irreps_out, self.irreps_out)
+        self.skip_connection = Linear(self.irreps_in, self.irreps_out)
+        self.self_interaction = Linear(self.irreps_out, self.irreps_out)
 
     def forward(self, x: torch.Tensor, *args) -> torch.Tensor:
         """Combines the input layer with a skip connection."""

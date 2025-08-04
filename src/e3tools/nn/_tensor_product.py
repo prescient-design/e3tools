@@ -4,6 +4,8 @@ import e3nn
 import e3nn.o3
 from torch import nn
 
+from ._linear import Linear
+
 
 class SeparableTensorProduct(nn.Module):
     """
@@ -48,7 +50,7 @@ class SeparableTensorProduct(nn.Module):
         )
 
         # point wise
-        self.lin = e3nn.o3.Linear(irreps_out_dtp, self.irreps_out)
+        self.lin = Linear(irreps_out_dtp, self.irreps_out)
 
         self.weight_numel = self.dtp.weight_numel
 
@@ -76,7 +78,7 @@ class ExperimentalTensorProduct(nn.Module):
 
         self.tp = e3nn.o3.FullTensorProductv2(self.irreps_in1, self.irreps_in2)
 
-        self.lin = e3nn.o3.Linear(
+        self.lin = Linear(
             self.tp.irreps_out,
             self.irreps_out,
             internal_weights=False,

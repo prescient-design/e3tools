@@ -11,6 +11,7 @@ from ._conv import Conv
 from ._interaction import LinearSelfInteraction
 from ._layer_norm import LayerNorm
 from ._mlp import EquivariantMLP
+from ._linear import Linear
 
 
 def split_irreps(
@@ -75,7 +76,7 @@ class Attention(nn.Module):
         self.irreps_key = e3nn.o3.Irreps(irreps_key)
         self.return_attention = return_attention
 
-        self.h_q = e3nn.o3.Linear(irreps_in, irreps_query)
+        self.h_q = Linear(irreps_in, irreps_query)
 
         if conv is None:
             conv = Conv
@@ -198,7 +199,7 @@ class MultiheadAttention(nn.Module):
         if conv is None:
             conv = Conv
 
-        self.h_q = e3nn.o3.Linear(irreps_in, irreps_query_split)
+        self.h_q = Linear(irreps_in, irreps_query_split)
 
         self.h_k = conv(
             irreps_in=self.irreps_in,
@@ -217,7 +218,7 @@ class MultiheadAttention(nn.Module):
             irreps_query_per_head, irreps_key_per_head, "0e"
         )
 
-        self.lin_out = e3nn.o3.Linear(irreps_out_split, irreps_out)
+        self.lin_out = Linear(irreps_out_split, irreps_out)
 
     def forward(self, node_attr, edge_index, edge_attr, edge_sh):
         """

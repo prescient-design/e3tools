@@ -3,7 +3,6 @@ from typing import Dict, Union
 import e3nn
 import torch
 import torch.nn as nn
-from e3nn import o3
 
 import e3tools
 import e3tools.nn
@@ -45,7 +44,7 @@ class E3ConvNet(nn.Module):
             num_embeddings=num_atom_types,
             embedding_dim=atom_type_embedding_dim,
         )
-        self.initial_linear = o3.Linear(
+        self.initial_linear = e3tools.nn.Linear(
             f"{atom_type_embedding_dim}x0e", self.irreps_hidden
         )
 

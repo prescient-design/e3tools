@@ -6,6 +6,8 @@ import e3nn.nn
 import torch
 from torch import nn
 
+from ._linear import Linear
+
 
 class Gate(nn.Module):
     """
@@ -130,8 +132,8 @@ class GateWrapper(nn.Module):
         self.irreps_gate = e3nn.o3.Irreps(irreps_gate)
 
         self.gate = Gate(irreps_out)
-        self.pre_gate = e3nn.o3.Linear(self.irreps_in, self.gate.irreps_in)
-        self.post_gate = e3nn.o3.Linear(self.gate.irreps_out, self.irreps_out)
+        self.pre_gate = Linear(self.irreps_in, self.gate.irreps_in)
+        self.post_gate = Linear(self.gate.irreps_out, self.irreps_out)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the pre-gate, gate, and post-gate transformations."""
