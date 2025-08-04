@@ -44,3 +44,18 @@ def scatter(
         f"{out.ndim=}, {index.ndim=} {out_shape=}, {in_shape=}, {dim=}"
     )
     return torch.scatter_reduce(out, dim, index, src, reduce, include_self=False)
+
+
+def scatter_softmax(
+    src: torch.Tensor, index: torch.Tensor, dim: int, dim_size: int | None = None
+):
+    max = scatter(src, index, dim, dim_size, reduce="amax")
+    max = torch.gather(input=max, dim=dim, index=index)
+
+    scores = (src - max).exp()
+    z = scatter(scores, index, dim, dim_size, reduce="sum")
+    z = torch.gather(input=z, dim=dim, index=index)
+
+    scores = scores / z
+
+    return scores

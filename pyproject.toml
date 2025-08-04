@@ -13,6 +13,7 @@ dependencies = [
     "jaxtyping>=0.2.38",
     "torch>=2.5.1",
     "setuptools>=78.1.0",
+    "einops>=0.8.1",
 ]
 
 [build-system]
@@ -26,6 +27,7 @@ dev = [
     "pytest>=8.3.4",
     "sphinx",
     "ruff",
+    "ipykernel>=6.30.1",
 ]
 
 [tool.ruff.lint]
