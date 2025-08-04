@@ -14,9 +14,9 @@ class E3Transformer(nn.Module):
 
     def __init__(
         self,
-        irreps_out: Union[str, e3nn.o3.Irreps],
-        irreps_hidden: Union[str, e3nn.o3.Irreps],
-        irreps_sh: Union[str, e3nn.o3.Irreps],
+        irreps_out: Union[str, o3.Irreps],
+        irreps_hidden: Union[str, o3.Irreps],
+        irreps_sh: Union[str, o3.Irreps],
         num_layers: int,
         edge_attr_dim: int,
         atom_type_embedding_dim: int,

@@ -3,6 +3,7 @@ from typing import Dict, Union
 import e3nn
 import torch
 import torch.nn as nn
+from e3nn import o3
 
 import e3tools
 import e3tools.nn
@@ -13,9 +14,9 @@ class E3ConvNet(nn.Module):
 
     def __init__(
         self,
-        irreps_out: Union[str, e3nn.o3.Irreps],
-        irreps_hidden: Union[str, e3nn.o3.Irreps],
-        irreps_sh: Union[str, e3nn.o3.Irreps],
+        irreps_out: Union[str, o3.Irreps],
+        irreps_hidden: Union[str, o3.Irreps],
+        irreps_sh: Union[str, o3.Irreps],
         num_layers: int,
         edge_attr_dim: int,
         atom_type_embedding_dim: int,
