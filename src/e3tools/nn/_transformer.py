@@ -5,7 +5,7 @@ import e3nn
 import e3nn.o3
 from torch import nn
 
-from e3tools import scatter
+from e3tools import scatter, scatter_softmax
 
 from ._conv import Conv
 from ._interaction import LinearSelfInteraction
@@ -124,16 +124,13 @@ class Attention(nn.Module):
         v = self.h_v.apply_per_edge(node_attr[src], edge_attr, edge_sh)
 
         # compute softmax
-        exp = self.dot(q[dst], k).exp()
-        z = scatter(exp, dst, dim=0, dim_size=N, reduce="mean")
-        alpha = exp / z[dst]
+        alpha = self.dot(q[dst], k)
+        alpha = scatter_softmax(alpha, dst, dim=0, dim_size=N)
 
-        attn = alpha.relu().sqrt()
-
-        out = scatter(attn * v, dst, dim=0, dim_size=N, reduce="sum")
+        out = scatter(alpha * v, dst, dim=0, dim_size=N, reduce="sum")
 
         if self.return_attention:
-            return out, attn
+            return out, alpha
         else:
             return out
 
@@ -252,20 +249,15 @@ class MultiheadAttention(nn.Module):
         k = k.view(E, self.num_heads, -1)
         v = v.view(E, self.num_heads, -1)
 
-        # compute softmax
-        exp = self.dot(q[dst], k).exp()
-        z = scatter(exp, dst, dim=0, dim_size=N, reduce="mean")
-        alpha = exp / z[dst]
-
-        attn = alpha.relu().sqrt()
-
-        out = scatter(attn * v, dst, dim=0, dim_size=N, reduce="sum").view(N, -1)
+        alpha = self.dot(q[dst], k)
+        alpha = scatter_softmax(alpha, dst, dim=0, dim_size=N)
+        out = scatter(alpha * v, dst, dim=0, dim_size=N, reduce="sum").view(N, -1)
 
         # use linear layer to transform back into original irreps
         out = self.lin_out(out)
 
         if self.return_attention:
-            return out, attn
+            return out, alpha
         else:
             return out
 
