@@ -40,3 +40,6 @@ source = "vcs"
 version_scheme = "no-guess-dev"
 fallback_version = "0.0.0"
 local_scheme = "no-local-version" # see https://github.com/pypa/setuptools-scm/issues/455
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
