@@ -23,6 +23,7 @@ __all__ = [
     "GateWrapper",
     "Gated",
     "LayerNorm",
+    "Linear",
     "LinearSelfInteraction",
     "MulToAxis",
     "MultiheadAttention",

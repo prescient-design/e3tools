@@ -1,5 +1,3 @@
-import e3nn
-import e3nn.o3
 import torch
 from torch import nn
 
