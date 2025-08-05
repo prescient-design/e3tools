@@ -1,13 +1,11 @@
 import pytest
 import torch
 import e3nn
-
-e3nn.set_optimization_defaults(jit_script_fx=False)
-
 import e3nn.o3
-import copy
 
 from e3tools.nn import Attention, MultiheadAttention
+
+e3nn.set_optimization_defaults(jit_script_fx=False)
 
 
 @pytest.fixture
