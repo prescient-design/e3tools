@@ -1,7 +1,7 @@
 # e3tools
 
 A repository of building blocks in PyTorch 2.0 for E(3)/SE(3)-equivariant neural networks, built on top of [e3nn](https://github.com/e3nn/e3nn):
-- Equivariant Linear Layers: [`e3tools.nn.Linear`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_linear.py#L3) 
+- Equivariant Linear Layers: [`e3tools.nn.Linear`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_linear.py#L3)
 - Equivariant Convolution: [`e3tools.nn.Conv`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_conv.py#L16) and [`e3tools.nn.SeparableConv`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_conv.py#L124)
 - Equivariant Multi-Layer Perceptrons (MLPs): [`e3tools.nn.EquivariantMLP`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_mlp.py#L86)
 - Equivariant Layer Norm: [`e3tools.nn.LayerNorm`](https://github.com/prescient-design/e3tools/blob/main/src/e3tools/nn/_layer_norm.py#L9)
