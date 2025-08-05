@@ -51,13 +51,16 @@ def scatter_softmax(
 ):
     index = broadcast(index, src, dim)
 
-    max = scatter(src, index, dim, dim_size, reduce="amax")
-    max = torch.gather(input=max, dim=dim, index=index)
+    segment_max = scatter(src, index, dim, dim_size, reduce="amax")
+    segment_max = torch.gather(input=segment_max, dim=dim, index=index)
+    segment_max = torch.where(
+        segment_max == float("-inf"), torch.zeros_like(segment_max), segment_max
+    )
 
-    scores = (src - max).exp()
+    scores = (src - segment_max).exp()
     z = scatter(scores, index, dim, dim_size, reduce="sum")
     z = torch.gather(input=z, dim=dim, index=index)
-
+    z = torch.where(z == 0, torch.ones_like(z), z)
     scores = scores / z
 
     return scores

@@ -3,6 +3,7 @@ import itertools
 
 import e3nn
 import e3nn.o3
+import torch
 from torch import nn
 
 from e3tools import scatter, scatter_softmax
@@ -44,7 +45,7 @@ class Attention(nn.Module):
         irreps_sh: e3nn.o3.Irreps,
         irreps_query: e3nn.o3.Irreps,
         irreps_key: e3nn.o3.Irreps,
-        edge_attr_dim,
+        edge_attr_dim: int,
         conv: Optional[Callable[..., nn.Module]] = None,
         return_attention: bool = False,
     ):
@@ -96,7 +97,14 @@ class Attention(nn.Module):
 
         self.dot = e3nn.o3.FullyConnectedTensorProduct(irreps_query, irreps_key, "0e")
 
-    def forward(self, node_attr, edge_index, edge_attr, edge_sh):
+    def forward(
+        self,
+        node_attr: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_attr: torch.Tensor,
+        edge_sh: torch.Tensor,
+        mask: torch.Tensor | None = None,
+    ) -> torch.Tensor | Tuple[torch.Tensor, torch.Tensor]:
         """
         Computes the forward pass of the equivariant graph attention
 
@@ -115,18 +123,22 @@ class Attention(nn.Module):
         """
 
         N = node_attr.shape[0]
-
         src, dst = edge_index
 
-        # compute queries (per node), keys (per edge) and values (per edge)
+        # Compute queries (per node), keys (per edge) and values (per edge)
         q = self.h_q(node_attr)
         k = self.h_k.apply_per_edge(node_attr[src], edge_attr, edge_sh)
         v = self.h_v.apply_per_edge(node_attr[src], edge_attr, edge_sh)
 
-        # compute softmax
         alpha = self.dot(q[dst], k)
+        if mask is not None:
+            alpha = torch.where(
+                mask[:, None], alpha, torch.full_like(alpha, float("-inf"))
+            )
+
         alpha = scatter_softmax(alpha, dst, dim=0, dim_size=N)
 
+        # Compute output by multiplying attention weights with values and summing over edges.
         out = scatter(alpha * v, dst, dim=0, dim_size=N, reduce="sum")
 
         if self.return_attention:
@@ -217,7 +229,14 @@ class MultiheadAttention(nn.Module):
 
         self.lin_out = Linear(irreps_out_split, irreps_out)
 
-    def forward(self, node_attr, edge_index, edge_attr, edge_sh):
+    def forward(
+        self,
+        node_attr: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_attr: torch.Tensor,
+        edge_sh: torch.Tensor,
+        mask: torch.Tensor | None = None,
+    ) -> torch.Tensor | Tuple[torch.Tensor, torch.Tensor]:
         """
         Computes the forward pass of equivariant graph attention
 
@@ -229,6 +248,7 @@ class MultiheadAttention(nn.Module):
         edge_index: [2, E]
         edge_attr: [E, edge_attr_dim]
         edge_sh: [E, irreps_sh.dim]
+        mask: [E] or None
 
         Returns
         -------
@@ -239,21 +259,26 @@ class MultiheadAttention(nn.Module):
         N = node_attr.shape[0]
         E = src.shape[0]
 
-        # compute queries (per node), keys (per edge) and values (per edge)
+        # Compute queries (per node), keys (per edge) and values (per edge)
         q = self.h_q(node_attr)
         k = self.h_k.apply_per_edge(node_attr[src], edge_attr, edge_sh)
         v = self.h_v.apply_per_edge(node_attr[src], edge_attr, edge_sh)
 
-        # create head index as batch-like dimension
+        # Create head index as batch-like dimension
         q = q.view(N, self.num_heads, -1)
         k = k.view(E, self.num_heads, -1)
         v = v.view(E, self.num_heads, -1)
 
         alpha = self.dot(q[dst], k)
+        if mask is not None:
+            alpha = torch.where(
+                mask[:, None, None], alpha, torch.full_like(alpha, float("-inf"))
+            )
+
         alpha = scatter_softmax(alpha, dst, dim=0, dim_size=N)
         out = scatter(alpha * v, dst, dim=0, dim_size=N, reduce="sum").view(N, -1)
 
-        # use linear layer to transform back into original irreps
+        # Use linear layer to transform back into original irreps
         out = self.lin_out(out)
 
         if self.return_attention:
@@ -273,7 +298,7 @@ class TransformerBlock(nn.Module):
         irreps_out: e3nn.o3.Irreps,
         irreps_sh: e3nn.o3.Irreps,
         edge_attr_dim: int,
-        num_heads: int = 1,
+        num_heads: int,
         irreps_query: Optional[e3nn.o3.Irreps] = None,
         irreps_key: Optional[e3nn.o3.Irreps] = None,
         irreps_ff_hidden_list: Optional[list[e3nn.o3.Irreps]] = None,
@@ -330,8 +355,8 @@ class TransformerBlock(nn.Module):
             irreps_sh,
             irreps_query,
             irreps_key,
-            edge_attr_dim,
-            num_heads,
+            edge_attr_dim=edge_attr_dim,
+            num_heads=num_heads,
             conv=conv,
             return_attention=False,
         )
