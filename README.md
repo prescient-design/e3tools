@@ -11,6 +11,13 @@ A repository of building blocks in PyTorch 2.0 for E(3)/SE(3)-equivariant neural
 
 All modules are compatible with `torch.compile` for JIT compilation.
 
+Note that you may need to turn off the old torch JIT compiler for some `e3nn` modules, at the top of your script ([example](https://github.com/prescient-design/e3tools/blob/main/examples/train_qm9.py#L16)):
+```python
+import e3nn
+e3nn.set_optimization_defaults(jit_script_fx=False)
+```
+
+
 ## Installation
 
 Install from PyPI:
