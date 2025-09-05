@@ -1,4 +1,4 @@
-from ._conv import Conv, ConvBlock, ExperimentalConv, SeparableConv, SeparableConvBlock
+from ._conv import Conv, ConvBlock, ExperimentalConv, SeparableConv, SeparableConvBlock, FusedConv
 from ._linear import Linear
 from ._gate import Gate, Gated, GateWrapper
 from ._interaction import LinearSelfInteraction
