@@ -14,10 +14,7 @@ from ._mlp import ScalarMLP
 from ._tensor_product import ExperimentalTensorProduct, SeparableTensorProduct
 
 try:
-    from openequivariance import (
-        TensorProductConv,
-        TPProblem,
-    )
+    import openequivariance as oeq
     openequivariance_available = True
 except ImportError as e:
     error_msg = str(e)
@@ -93,21 +90,32 @@ class FusedConv(nn.Module):
                 internal_weights=False,
             )
 
+
         self.tp = tensor_product(irreps_in, irreps_sh, irreps_out)
+        if radial_nn is None:
+            radial_nn = functools.partial(
+                ScalarMLP,
+                hidden_features=[edge_attr_dim],
+                activation_layer=nn.SiLU,
+            )
+
+        self.radial_nn = radial_nn(edge_attr_dim, self.tp.weight_numel)
 
         if not openequivariance_available:
             raise ImportError(f"OpenEquivariance could not be imported:\n{error_msg}")
 
-        tpp = TPProblem(
-            input_irreps,
-            sh_irreps,
-            tp_irreps,
-            instructions_tp,
+        # Remove path shape from instructions.
+        oeq_instructions = [instruction[:6] for instruction in self.tp.instructions]
+        oeq_tpp = oeq.TPProblem(
+            self.tp.irreps_in1,
+            self.tp.irreps_in2,
+            self.tp.irreps_out,
+            oeq_instructions,
             shared_weights=False,
             internal_weights=False,
         )
-        self.fused_tp = TensorProductConv(
-            tpp, torch_op=True, deterministic=False, use_opaque=False
+        self.fused_tp = oeq.TensorProductConv(
+            oeq_tpp, torch_op=True, deterministic=False, use_opaque=False
         )
 
     def forward(self, node_attr: torch.Tensor, edge_index: torch.Tensor, edge_attr: torch.Tensor, edge_sh: torch.Tensor) -> torch.Tensor:
@@ -130,9 +138,10 @@ class FusedConv(nn.Module):
         N = node_attr.shape[0]
 
         src, dst = edge_index
-        messages_agg = self.tp_conv(node_attr, edge_sh, self.radial_nn(edge_attr), src, dst)
-        num_neighbors = scatter(torch.ones_like(dst), dst, dim=0, dim_size=N, reduce="sum")
-        out = messages_agg / num_neighbors.clamp_min(1).unsqueeze(-1)
+        radial_attr = self.radial_nn(edge_attr)
+        messages_agg = self.fused_tp(node_attr, edge_sh, radial_attr, dst, src)
+        num_neighbors = scatter(torch.ones_like(src), src, dim=0, dim_size=N, reduce="sum")
+        out = messages_agg
         return out
 
 
