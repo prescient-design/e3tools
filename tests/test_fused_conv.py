@@ -14,8 +14,9 @@ TENSOR_PRODUCTS = [
         shared_weights=False,
         internal_weights=False,
     ),
-    DepthwiseTensorProduct
+    DepthwiseTensorProduct,
 ]
+
 
 @pytest.mark.parametrize("tensor_product", TENSOR_PRODUCTS)
 @pytest.mark.parametrize("seed", [0, 1])
@@ -33,12 +34,32 @@ def test_fused_conv(tensor_product, seed):
     irreps_sh = irreps_in.spherical_harmonics(2)
 
     tp = tensor_product(irreps_in, irreps_sh, irreps_in)
-    common_radial_nn = ScalarMLP(in_features=edge_attr_dim, out_features=tp.weight_numel, hidden_features=[edge_attr_dim], activation_layer=nn.SiLU)
+    common_radial_nn = ScalarMLP(
+        in_features=edge_attr_dim,
+        out_features=tp.weight_numel,
+        hidden_features=[edge_attr_dim],
+        activation_layer=nn.SiLU,
+    )
+
     def radial_nn(edge_attr_dim: int, num_elements: int) -> nn.Module:
         return common_radial_nn
 
-    layer = Conv(irreps_in=irreps_in, irreps_out=irreps_in, irreps_sh=irreps_sh, radial_nn=radial_nn, edge_attr_dim=edge_attr_dim, tensor_product=tensor_product)
-    fused_layer = FusedConv(irreps_in=irreps_in, irreps_out=irreps_in, irreps_sh=irreps_sh, radial_nn=radial_nn, edge_attr_dim=edge_attr_dim, tensor_product=tensor_product)
+    layer = Conv(
+        irreps_in=irreps_in,
+        irreps_out=irreps_in,
+        irreps_sh=irreps_sh,
+        radial_nn=radial_nn,
+        edge_attr_dim=edge_attr_dim,
+        tensor_product=tensor_product,
+    )
+    fused_layer = FusedConv(
+        irreps_in=irreps_in,
+        irreps_out=irreps_in,
+        irreps_sh=irreps_sh,
+        radial_nn=radial_nn,
+        edge_attr_dim=edge_attr_dim,
+        tensor_product=tensor_product,
+    )
 
     pos = torch.randn(N, 3)
     node_attr = layer.irreps_in.randn(N, -1)
@@ -62,4 +83,3 @@ def test_fused_conv(tensor_product, seed):
     out_fused = fused_layer(node_attr, edge_index, edge_attr, edge_sh)
 
     assert torch.allclose(out, out_fused, rtol=1e-3)
-
