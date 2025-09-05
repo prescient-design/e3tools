@@ -10,7 +10,6 @@ from e3tools.nn import (
     Conv,
     ConvBlock,
     EquivariantMLP,
-    ExperimentalConv,
     Gated,
     LayerNorm,
     MultiheadAttention,
@@ -21,7 +20,7 @@ from e3tools import radius_graph
 
 torch.set_default_dtype(torch.float64)
 
-CONV_LAYERS = [Conv, SeparableConv, ExperimentalConv]
+CONV_LAYERS = [Conv, SeparableConv]
 
 
 def apply_layer_rotation(layer: torch.nn.Module) -> Tuple[torch.Tensor, torch.Tensor]:
