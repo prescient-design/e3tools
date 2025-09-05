@@ -11,10 +11,11 @@ from e3tools import scatter
 from ._gate import Gated
 from ._interaction import LinearSelfInteraction
 from ._mlp import ScalarMLP
-from ._tensor_product import ExperimentalTensorProduct, SeparableTensorProduct
+from ._tensor_product import SeparableTensorProduct, DepthwiseTensorProduct
 
 try:
     import openequivariance as oeq
+
     openequivariance_available = True
 except ImportError as e:
     error_msg = str(e)
@@ -90,7 +91,6 @@ class FusedConv(nn.Module):
                 internal_weights=False,
             )
 
-
         self.tp = tensor_product(irreps_in, irreps_sh, irreps_out)
         if radial_nn is None:
             radial_nn = functools.partial(
@@ -104,8 +104,8 @@ class FusedConv(nn.Module):
         if not openequivariance_available:
             raise ImportError(f"OpenEquivariance could not be imported:\n{error_msg}")
 
-        # Remove path shape from instructions.
-        oeq_instructions = [instruction[:6] for instruction in self.tp.instructions]
+        # Remove path weight and path shape from instructions.
+        oeq_instructions = [instruction[:5] for instruction in self.tp.instructions]
         oeq_tpp = oeq.TPProblem(
             self.tp.irreps_in1,
             self.tp.irreps_in2,
@@ -118,7 +118,13 @@ class FusedConv(nn.Module):
             oeq_tpp, torch_op=True, deterministic=False, use_opaque=False
         )
 
-    def forward(self, node_attr: torch.Tensor, edge_index: torch.Tensor, edge_attr: torch.Tensor, edge_sh: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        node_attr: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_attr: torch.Tensor,
+        edge_sh: torch.Tensor,
+    ) -> torch.Tensor:
         """
         Computes the forward pass of the equivariant convolution.
 
@@ -140,8 +146,10 @@ class FusedConv(nn.Module):
         src, dst = edge_index
         radial_attr = self.radial_nn(edge_attr)
         messages_agg = self.fused_tp(node_attr, edge_sh, radial_attr, dst, src)
-        num_neighbors = scatter(torch.ones_like(src), src, dim=0, dim_size=N, reduce="sum")
-        out = messages_agg
+        num_neighbors = scatter(
+            torch.ones_like(src), src, dim=0, dim_size=N, reduce="sum"
+        )
+        out = messages_agg / num_neighbors.clamp_min(1).unsqueeze(1)
         return out
 
 
@@ -223,10 +231,21 @@ class Conv(nn.Module):
 
         self.radial_nn = radial_nn(edge_attr_dim, self.tp.weight_numel)
 
-    def apply_per_edge(self, node_attr_src: torch.Tensor, edge_attr: torch.Tensor, edge_sh: torch.Tensor) -> torch.Tensor:
+    def apply_per_edge(
+        self,
+        node_attr_src: torch.Tensor,
+        edge_attr: torch.Tensor,
+        edge_sh: torch.Tensor,
+    ) -> torch.Tensor:
         return self.tp(node_attr_src, edge_sh, self.radial_nn(edge_attr))
 
-    def forward(self, node_attr: torch.Tensor, edge_index: torch.Tensor, edge_attr: torch.Tensor, edge_sh: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        node_attr: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_attr: torch.Tensor,
+        edge_sh: torch.Tensor,
+    ) -> torch.Tensor:
         """
         Computes the forward pass of the equivariant convolution.
 
@@ -268,12 +287,19 @@ class SeparableConv(Conv):
         )
 
 
-class ExperimentalConv(Conv):
+class FusedDepthwiseConv(FusedConv):
+    """
+    Equivariant convolution layer using separable tensor product
+
+    ref: https://arxiv.org/abs/1802.08219
+    ref: https://arxiv.org/abs/2206.11990
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
             **kwargs,
-            tensor_product=ExperimentalTensorProduct,
+            tensor_product=DepthwiseTensorProduct,
         )
 
 
