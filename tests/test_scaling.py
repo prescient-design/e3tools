@@ -30,7 +30,7 @@ def test_scale_irreps_by_one(irreps_in: str):
     weight = torch.ones(irreps_in.num_irreps)
     output = layer(input, weight)
 
-    assert torch.allclose(input, output)
+    torch.testing.assert_close(input, output)
 
 
 @pytest.mark.parametrize("irreps_in", ["0e + 1o", "0e + 1o + 2e", "3x1o + 2x2o"])
@@ -46,4 +46,4 @@ def test_scale_irreps_random(irreps_in: str):
 
     norm = e3nn.o3.Norm(irreps_in)
     factor = norm(output) / norm(input)
-    assert torch.allclose(factor, torch.abs(weight))
+    torch.testing.assert_close(factor, torch.abs(weight))

@@ -72,7 +72,7 @@ def test_conv(conv):
         layer = conv(irreps_in, irreps_in, irreps_sh, edge_attr_dim=edge_attr_dim)
 
         out_1, out_2 = apply_layer_rotation(layer)
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
@@ -89,7 +89,7 @@ def test_gated_conv(conv):
         layer = Gated(wrapped, irreps_in=irreps_in, irreps_out=irreps_in)
 
         out_1, out_2 = apply_layer_rotation(layer)
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
@@ -108,7 +108,7 @@ def test_conv_block(conv):
         )
 
         out_1, out_2 = apply_layer_rotation(layer)
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
@@ -132,7 +132,7 @@ def test_attention(conv):
         )
 
         out_1, out_2 = apply_layer_rotation(layer)
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 @pytest.mark.parametrize("conv", [Conv, SeparableConv])
@@ -158,7 +158,7 @@ def test_multihead_attention(conv):
         )
 
         out_1, out_2 = apply_layer_rotation(layer)
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 def test_layer_norm():
@@ -174,7 +174,7 @@ def test_layer_norm():
         out_1 = layer(x @ D.T)
         out_2 = layer(x) @ D.T
 
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 def test_equivariant_mlp():
@@ -194,7 +194,7 @@ def test_equivariant_mlp():
         out_1 = layer(x @ D.T)
         out_2 = layer(x) @ D.T
 
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
 
 
 def test_transformer():
@@ -214,4 +214,4 @@ def test_transformer():
         )
 
         out_1, out_2 = apply_layer_rotation(layer)
-        assert torch.allclose(out_1, out_2, atol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)

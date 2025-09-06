@@ -41,7 +41,7 @@ def test_layer_norm_compiled(irreps_in: str, seed: int, batch_size: int = 8):
     output = layer(input)
     output_compiled = layer_compiled(input)
 
-    assert torch.allclose(output, output_compiled)
+    torch.testing.assert_close(output, output_compiled)
 
 
 @pytest.mark.parametrize(
@@ -57,8 +57,13 @@ def test_layer_norm(irreps_in: str):
     output = layer(input)
 
     for mul, ir, field in unpack_irreps(output, irreps_in):
-        sq_norms = field.norm(dim=-1, keepdim=True).pow(2).sum(dim=-1).mean(dim=-1)
+        sq_norms = (
+            field.norm(dim=-1, keepdim=True)
+            .pow(2)
+            .sum(dim=-1)
+            .mean(dim=-1, keepdim=True)
+        )
         if ir.l == 0 and ir.p == 1 and mul == 1:
-            assert torch.allclose(sq_norms, torch.as_tensor([0.0]))
+            torch.testing.assert_close(sq_norms, torch.as_tensor([0.0]))
         else:
-            assert torch.allclose(sq_norms, torch.as_tensor([1.0]))
+            torch.testing.assert_close(sq_norms, torch.as_tensor([1.0]))

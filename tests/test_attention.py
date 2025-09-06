@@ -87,7 +87,7 @@ def test_compile(model_name, causal, request, irreps_in, irreps_sh, edge_attr_di
     out = model(node_attr, edge_index, edge_attr, edge_sh, mask=mask)
     compiled_out = compiled_model(node_attr, edge_index, edge_attr, edge_sh, mask=mask)
 
-    assert torch.allclose(out, compiled_out)
+    torch.testing.assert_close(out, compiled_out)
 
 
 @pytest.mark.parametrize("model_name", ["singlehead_attention", "multihead_attention"])
@@ -124,20 +124,22 @@ def test_causal_vs_non_causal_attention(
     causal_mask = edge_index[0] <= edge_index[1]
     non_causal_out = model(node_attr, edge_index, edge_attr, edge_sh, mask=None)
     causal_out = model(node_attr, edge_index, edge_attr, edge_sh, mask=causal_mask)
-    assert torch.allclose(non_causal_out, causal_out)
+    torch.testing.assert_close(non_causal_out, causal_out)
 
     # Check that the outputs are the same for the nodes that do not have any causal edges.
     edge_index = torch.tensor([[0, 1, 2, 3], [1, 2, 3, 0]])
     causal_mask = edge_index[0] <= edge_index[1]
     non_causal_out = model(node_attr, edge_index, edge_attr, edge_sh, mask=None)
     causal_out = model(node_attr, edge_index, edge_attr, edge_sh, mask=causal_mask)
-    assert not torch.allclose(non_causal_out[:1], causal_out[:1])
-    assert torch.allclose(non_causal_out[1:], causal_out[1:])
+    with pytest.raises(AssertionError):
+        torch.testing.assert_close(non_causal_out[:1], causal_out[:1])
+    torch.testing.assert_close(non_causal_out[1:], causal_out[1:])
 
     # Check that the outputs are the same for the nodes that do not have any causal edges.
     edge_index = torch.tensor([[0, 1, 2, 3], [0, 0, 1, 4]])
     causal_mask = edge_index[0] <= edge_index[1]
     non_causal_out = model(node_attr, edge_index, edge_attr, edge_sh, mask=None)
     causal_out = model(node_attr, edge_index, edge_attr, edge_sh, mask=causal_mask)
-    assert not torch.allclose(non_causal_out[:2], causal_out[:2])
-    assert torch.allclose(non_causal_out[2:], causal_out[2:])
+    with pytest.raises(AssertionError):
+        torch.testing.assert_close(non_causal_out[:2], causal_out[:2])
+    torch.testing.assert_close(non_causal_out[2:], causal_out[2:])

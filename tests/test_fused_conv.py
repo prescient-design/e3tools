@@ -82,4 +82,4 @@ def test_fused_conv(tensor_product, seed):
     out = layer(node_attr, edge_index, edge_attr, edge_sh)
     out_fused = fused_layer(node_attr, edge_index, edge_attr, edge_sh)
 
-    assert torch.allclose(out, out_fused, rtol=1e-3)
+    torch.testing.assert_close(out, out_fused, rtol=1e-3, atol=1e-5)
