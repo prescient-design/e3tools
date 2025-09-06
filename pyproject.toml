@@ -29,6 +29,9 @@ dev = [
     "ruff",
     "ipykernel>=6.30.1",
 ]
+openequivariance = [
+    "openequivariance>=0.4.1",
+]
 
 [tool.ruff.lint]
 ignore = ["F722"]

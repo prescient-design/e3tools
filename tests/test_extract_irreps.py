@@ -32,15 +32,15 @@ def test_extract_irreps_simple():
 
     layer = ExtractIrreps(irreps_in, "0e")
     output = layer(input)
-    assert torch.allclose(output, torch.as_tensor([1.0]))
+    torch.testing.assert_close(output, torch.as_tensor([1.0]))
 
     layer = ExtractIrreps(irreps_in, "1o")
     output = layer(input)
-    assert torch.allclose(output, torch.as_tensor([2.0, 3.0, 4.0]))
+    torch.testing.assert_close(output, torch.as_tensor([2.0, 3.0, 4.0]))
 
     layer = ExtractIrreps(irreps_in, "2e")
     output = layer(input)
-    assert torch.allclose(output, torch.as_tensor([5.0, 6.0, 7.0, 8.0, 9.0]))
+    torch.testing.assert_close(output, torch.as_tensor([5.0, 6.0, 7.0, 8.0, 9.0]))
 
 
 def test_extract_irreps_multiplicity():
@@ -50,8 +50,8 @@ def test_extract_irreps_multiplicity():
 
     layer = ExtractIrreps(irreps_in, "0e")
     output = layer(input)
-    assert torch.allclose(output, torch.as_tensor([1.0, 5.0, 6.0]))
+    torch.testing.assert_close(output, torch.as_tensor([1.0, 5.0, 6.0]))
 
     layer = ExtractIrreps(irreps_in, "1o")
     output = layer(input)
-    assert torch.allclose(output, torch.as_tensor([2.0, 3.0, 4.0, 7.0, 8.0, 9.0]))
+    torch.testing.assert_close(output, torch.as_tensor([2.0, 3.0, 4.0, 7.0, 8.0, 9.0]))

@@ -100,7 +100,7 @@ def test_inverse(irreps_in: str, factor: int, batch_size: int = 5):
     output = layer(input)
     recovered = inv_layer(output)
 
-    assert torch.allclose(input, recovered)
+    torch.testing.assert_close(input, recovered)
 
 
 @pytest.mark.parametrize(
@@ -116,7 +116,7 @@ def test_axis_to_mul_compiled(irreps_in: str, factor: int, batch_size: int = 5):
     layer = AxisToMul(irreps_in, factor)
     layer_compiled = torch.compile(layer, fullgraph=True)
 
-    assert torch.allclose(layer(input), layer_compiled(input))
+    torch.testing.assert_close(layer(input), layer_compiled(input))
 
 
 @pytest.mark.parametrize(
@@ -132,4 +132,4 @@ def test_mul_to_axis_compiled(irreps_in: str, factor: int, batch_size: int = 5):
     layer = MulToAxis(irreps_in, factor)
     layer_compiled = torch.compile(layer, fullgraph=True)
 
-    assert torch.allclose(layer(input), layer_compiled(input))
+    torch.testing.assert_close(layer(input), layer_compiled(input))
