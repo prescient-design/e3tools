@@ -17,8 +17,7 @@ from e3tools.nn import (
     TransformerBlock,
 )
 from e3tools import radius_graph
-
-torch.set_default_dtype(torch.float64)
+from e3tools.utils import default_dtype_manager
 
 CONV_LAYERS = [Conv, SeparableConv]
 
@@ -65,144 +64,154 @@ def apply_layer_rotation(layer: torch.nn.Module) -> Tuple[torch.Tensor, torch.Te
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_conv(conv):
-    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_sh = irreps_in.spherical_harmonics(2)
-    edge_attr_dim = 10
+    with default_dtype_manager(torch.float64):
+        irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_sh = irreps_in.spherical_harmonics(2)
+        edge_attr_dim = 10
 
-    layer = conv(irreps_in, irreps_in, irreps_sh, edge_attr_dim=edge_attr_dim)
+        layer = conv(irreps_in, irreps_in, irreps_sh, edge_attr_dim=edge_attr_dim)
 
-    out_1, out_2 = apply_layer_rotation(layer)
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        out_1, out_2 = apply_layer_rotation(layer)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_gated_conv(conv):
-    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_sh = irreps_in.spherical_harmonics(2)
-    edge_attr_dim = 10
+    with default_dtype_manager(torch.float64):
+        irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_sh = irreps_in.spherical_harmonics(2)
+        edge_attr_dim = 10
 
-    wrapped = functools.partial(conv, irreps_sh=irreps_sh, edge_attr_dim=edge_attr_dim)
+        wrapped = functools.partial(
+            conv, irreps_sh=irreps_sh, edge_attr_dim=edge_attr_dim
+        )
 
-    layer = Gated(wrapped, irreps_in=irreps_in, irreps_out=irreps_in)
+        layer = Gated(wrapped, irreps_in=irreps_in, irreps_out=irreps_in)
 
-    out_1, out_2 = apply_layer_rotation(layer)
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        out_1, out_2 = apply_layer_rotation(layer)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_conv_block(conv):
-    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_sh = irreps_in.spherical_harmonics(2)
-    edge_attr_dim = 10
+    with default_dtype_manager(torch.float64):
+        irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_sh = irreps_in.spherical_harmonics(2)
+        edge_attr_dim = 10
 
-    layer = ConvBlock(
-        irreps_in=irreps_in,
-        irreps_out=irreps_in,
-        irreps_sh=irreps_sh,
-        edge_attr_dim=edge_attr_dim,
-        conv=conv,
-    )
+        layer = ConvBlock(
+            irreps_in=irreps_in,
+            irreps_out=irreps_in,
+            irreps_sh=irreps_sh,
+            edge_attr_dim=edge_attr_dim,
+            conv=conv,
+        )
 
-    out_1, out_2 = apply_layer_rotation(layer)
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        out_1, out_2 = apply_layer_rotation(layer)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", CONV_LAYERS)
 def test_attention(conv):
-    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_out = irreps_in
-    irreps_sh = irreps_in.spherical_harmonics(2)
-    irreps_key = irreps_in
-    irreps_query = irreps_in
-    edge_attr_dim = 10
+    with default_dtype_manager(torch.float64):
+        irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_out = irreps_in
+        irreps_sh = irreps_in.spherical_harmonics(2)
+        irreps_key = irreps_in
+        irreps_query = irreps_in
+        edge_attr_dim = 10
 
-    layer = Attention(
-        irreps_in,
-        irreps_out,
-        irreps_sh,
-        irreps_query,
-        irreps_key,
-        edge_attr_dim,
-        conv=conv,
-    )
+        layer = Attention(
+            irreps_in,
+            irreps_out,
+            irreps_sh,
+            irreps_query,
+            irreps_key,
+            edge_attr_dim,
+            conv=conv,
+        )
 
-    out_1, out_2 = apply_layer_rotation(layer)
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        out_1, out_2 = apply_layer_rotation(layer)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 @pytest.mark.parametrize("conv", [Conv, SeparableConv])
 def test_multihead_attention(conv):
-    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_out = irreps_in
-    irreps_sh = irreps_in.spherical_harmonics(2)
-    irreps_key = irreps_in
-    irreps_query = irreps_in
-    edge_attr_dim = 10
-    num_heads = 2
+    with default_dtype_manager(torch.float64):
+        irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_out = irreps_in
+        irreps_sh = irreps_in.spherical_harmonics(2)
+        irreps_key = irreps_in
+        irreps_query = irreps_in
+        edge_attr_dim = 10
+        num_heads = 2
 
-    layer = MultiheadAttention(
-        irreps_in,
-        irreps_out,
-        irreps_sh,
-        irreps_query,
-        irreps_key,
-        edge_attr_dim,
-        num_heads,
-        conv=conv,
-    )
+        layer = MultiheadAttention(
+            irreps_in,
+            irreps_out,
+            irreps_sh,
+            irreps_query,
+            irreps_key,
+            edge_attr_dim,
+            num_heads,
+            conv=conv,
+        )
 
-    out_1, out_2 = apply_layer_rotation(layer)
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        out_1, out_2 = apply_layer_rotation(layer)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 def test_layer_norm():
-    irreps = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+    with default_dtype_manager(torch.float64):
+        irreps = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
 
-    layer = LayerNorm(irreps)
-    rot = e3nn.o3.rand_matrix()
-    D = irreps.D_from_matrix(rot)
+        layer = LayerNorm(irreps)
+        rot = e3nn.o3.rand_matrix()
+        D = irreps.D_from_matrix(rot)
 
-    x = irreps.randn(10, -1)
+        x = irreps.randn(10, -1)
 
-    out_1 = layer(x @ D.T)
-    out_2 = layer(x) @ D.T
+        out_1 = layer(x @ D.T)
+        out_2 = layer(x) @ D.T
 
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 def test_equivariant_mlp():
-    irreps = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_hidden = e3nn.o3.Irreps([(4 * mul, ir) for mul, ir in irreps])
+    with default_dtype_manager(torch.float64):
+        irreps = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_hidden = e3nn.o3.Irreps([(4 * mul, ir) for mul, ir in irreps])
 
-    layer = EquivariantMLP(
-        irreps, irreps, [irreps_hidden, irreps_hidden], norm_layer=LayerNorm
-    )
+        layer = EquivariantMLP(
+            irreps, irreps, [irreps_hidden, irreps_hidden], norm_layer=LayerNorm
+        )
 
-    rot = e3nn.o3.rand_matrix()
-    D = irreps.D_from_matrix(rot)
+        rot = e3nn.o3.rand_matrix()
+        D = irreps.D_from_matrix(rot)
 
-    x = irreps.randn(10, -1)
+        x = irreps.randn(10, -1)
 
-    out_1 = layer(x @ D.T)
-    out_2 = layer(x) @ D.T
+        out_1 = layer(x @ D.T)
+        out_2 = layer(x) @ D.T
 
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
 
 
 def test_transformer():
-    irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
-    irreps_out = irreps_in
-    irreps_sh = irreps_in.spherical_harmonics(2)
-    edge_attr_dim = 10
-    num_heads = 2
+    with default_dtype_manager(torch.float64):
+        irreps_in = e3nn.o3.Irreps("10x0e + 10x1o + 10x2e")
+        irreps_out = irreps_in
+        irreps_sh = irreps_in.spherical_harmonics(2)
+        edge_attr_dim = 10
+        num_heads = 2
 
-    layer = TransformerBlock(
-        irreps_in=irreps_in,
-        irreps_out=irreps_out,
-        irreps_sh=irreps_sh,
-        edge_attr_dim=edge_attr_dim,
-        num_heads=num_heads,
-    )
+        layer = TransformerBlock(
+            irreps_in=irreps_in,
+            irreps_out=irreps_out,
+            irreps_sh=irreps_sh,
+            edge_attr_dim=edge_attr_dim,
+            num_heads=num_heads,
+        )
 
-    out_1, out_2 = apply_layer_rotation(layer)
-    assert torch.allclose(out_1, out_2, atol=1e-10)
+        out_1, out_2 = apply_layer_rotation(layer)
+        assert torch.allclose(out_1, out_2, atol=1e-10)
