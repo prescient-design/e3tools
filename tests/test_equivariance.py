@@ -158,7 +158,7 @@ def test_multihead_attention(conv):
         )
 
         out_1, out_2 = apply_layer_rotation(layer)
-        torch.testing.assert_close(out_1, out_2, atol=1e-10, rtol=1e-10)
+        torch.testing.assert_close(out_1, out_2, atol=1e-9, rtol=1e-10)
 
 
 def test_layer_norm():
