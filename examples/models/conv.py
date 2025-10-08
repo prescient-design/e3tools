@@ -22,6 +22,7 @@ class E3ConvNet(nn.Module):
         atom_type_embedding_dim: int,
         num_atom_types: int,
         max_radius: float,
+        conv_type: str = "default"
     ):
         super().__init__()
 
@@ -49,10 +50,17 @@ class E3ConvNet(nn.Module):
             f"{atom_type_embedding_dim}x0e", self.irreps_hidden
         )
 
+        if conv_type == "default":
+            conv_block = e3tools.nn.ConvBlock
+        elif conv_type == "separable":
+            conv_block = e3tools.nn.SeparableConvBlock
+        elif conv_type == "fused_separable":
+            conv_block = e3tools.nn.FusedSeparableConvBlock
+
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
             self.layers.append(
-                e3tools.nn.ConvBlock(
+                conv_block(
                     irreps_in=self.irreps_hidden,
                     irreps_out=self.irreps_hidden,
                     irreps_sh=self.irreps_sh,

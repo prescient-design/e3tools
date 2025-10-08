@@ -58,8 +58,15 @@ parser.add_argument(
     "--model",
     type=str,
     choices=["conv", "transformer"],
-    default="transformer",
+    default="conv",
     help="Model type to use (E3ConvNet or E3Transformer)",
+)
+parser.add_argument(
+    "--conv_type",
+    type=str,
+    choices=["default", "separable", "fused_separable"],
+    default="default",
+    help="Type of convolution to use in E3ConvNet (default, separable, fused_separable)",
 )
 args = parser.parse_args()
 
@@ -126,7 +133,6 @@ class NormalizeTarget(torch_geometric.transforms.BaseTransform):
         return data
 
 
-# Define training function
 def train_epoch(
     model: nn.Module,
     loader: torch.utils.data.DataLoader,
@@ -158,7 +164,6 @@ def train_epoch(
             pbar.update(1)
 
 
-# Define evaluation function
 def evaluate(
     model: nn.Module, loader: torch.utils.data.DataLoader, device: torch.device
 ) -> float:
@@ -243,6 +248,7 @@ if __name__ == "__main__":
             atom_type_embedding_dim=args.atom_embedding_dim,
             num_atom_types=dataset.z.max().item() + 1,
             max_radius=args.max_radius,
+            conv_type=args.conv_type,
         )
     elif args.model == "transformer":
         model = E3Transformer(
