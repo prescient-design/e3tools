@@ -5,15 +5,26 @@ import torch
 from torch import nn
 import e3nn
 
-from e3tools.nn import Conv, FusedConv, DepthwiseTensorProduct, ScalarMLP, SeparableConv, FusedSeparableConv, SeparableTensorProduct
+from e3tools.nn import (
+    Conv,
+    FusedConv,
+    DepthwiseTensorProduct,
+    ScalarMLP,
+    SeparableConv,
+    FusedSeparableConv,
+    SeparableTensorProduct,
+)
 from e3tools import radius_graph
 
 
-@pytest.mark.parametrize("tensor_product_type", [
-    "default",
-    "depthwise",
-    "separable",
-])
+@pytest.mark.parametrize(
+    "tensor_product_type",
+    [
+        "default",
+        "depthwise",
+        "separable",
+    ],
+)
 @pytest.mark.parametrize("seed", [0, 1])
 def test_fused_conv(tensor_product_type: str, seed: int):
     if not torch.cuda.is_available():
