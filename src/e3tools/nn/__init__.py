@@ -4,7 +4,8 @@ from ._conv import (
     SeparableConv,
     SeparableConvBlock,
     FusedConv,
-    FusedDepthwiseConv,
+    FusedSeparableConv,
+    FusedSeparableConvBlock,
 )
 from ._linear import Linear
 from ._gate import Gate, Gated, GateWrapper
@@ -26,7 +27,8 @@ __all__ = [
     "EquivariantMLP",
     "ExtractIrreps",
     "FusedConv",
-    "FusedDepthwiseConv",
+    "FusedSeparableConv",
+    "FusedSeparableConvBlock",
     "Gate",
     "GateWrapper",
     "Gated",

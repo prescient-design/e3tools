@@ -48,6 +48,8 @@ class DepthwiseTensorProduct(nn.Module):
             internal_weights=False,
             shared_weights=False,
         )
+
+        # For book-keeping.
         self.irreps_out = self.tp.irreps_out
         self.weight_numel = self.tp.weight_numel
         self.instructions = self.tp.instructions
@@ -85,7 +87,6 @@ class SeparableTensorProduct(nn.Module):
         self.lin = Linear(self.dtp.irreps_out, self.irreps_out)
 
         # For book-keeping.
-        self.instructions = self.dtp.instructions
         self.weight_numel = self.dtp.weight_numel
 
     def forward(self, x, y, weight):

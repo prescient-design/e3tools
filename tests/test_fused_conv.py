@@ -5,24 +5,32 @@ import torch
 from torch import nn
 import e3nn
 
-from e3tools.nn import Conv, FusedConv, DepthwiseTensorProduct, ScalarMLP
+from e3tools.nn import Conv, FusedConv, DepthwiseTensorProduct, ScalarMLP, SeparableConv, FusedSeparableConv, SeparableTensorProduct
 from e3tools import radius_graph
 
-TENSOR_PRODUCTS = [
-    functools.partial(
-        e3nn.o3.FullyConnectedTensorProduct,
-        shared_weights=False,
-        internal_weights=False,
-    ),
-    DepthwiseTensorProduct,
-]
 
-
-@pytest.mark.parametrize("tensor_product", TENSOR_PRODUCTS)
+@pytest.mark.parametrize("tensor_product_type", [
+    "default",
+    "depthwise",
+    "separable",
+])
 @pytest.mark.parametrize("seed", [0, 1])
-def test_fused_conv(tensor_product, seed):
+def test_fused_conv(tensor_product_type: str, seed: int):
     if not torch.cuda.is_available():
         pytest.skip("CUDA is not available")
+
+    if tensor_product_type == "default":
+        tensor_product = functools.partial(
+            e3nn.o3.FullyConnectedTensorProduct,
+            shared_weights=False,
+            internal_weights=False,
+        )
+
+    elif tensor_product_type == "depthwise":
+        tensor_product = DepthwiseTensorProduct
+
+    elif tensor_product_type == "separable":
+        tensor_product = SeparableTensorProduct
 
     torch.manual_seed(seed)
     torch.set_default_device("cuda")
@@ -33,22 +41,10 @@ def test_fused_conv(tensor_product, seed):
     irreps_in = e3nn.o3.Irreps("10x0e + 4x1o + 1x2e")
     irreps_sh = irreps_in.spherical_harmonics(2)
 
-    tp = tensor_product(irreps_in, irreps_sh, irreps_in)
-    common_radial_nn = ScalarMLP(
-        in_features=edge_attr_dim,
-        out_features=tp.weight_numel,
-        hidden_features=[edge_attr_dim],
-        activation_layer=nn.SiLU,
-    )
-
-    def radial_nn(edge_attr_dim: int, num_elements: int) -> nn.Module:
-        return common_radial_nn
-
     layer = Conv(
         irreps_in=irreps_in,
         irreps_out=irreps_in,
         irreps_sh=irreps_sh,
-        radial_nn=radial_nn,
         edge_attr_dim=edge_attr_dim,
         tensor_product=tensor_product,
     )
@@ -56,10 +52,12 @@ def test_fused_conv(tensor_product, seed):
         irreps_in=irreps_in,
         irreps_out=irreps_in,
         irreps_sh=irreps_sh,
-        radial_nn=radial_nn,
         edge_attr_dim=edge_attr_dim,
         tensor_product=tensor_product,
     )
+
+    # Copy weights.
+    fused_layer.load_state_dict(layer.state_dict())
 
     pos = torch.randn(N, 3)
     node_attr = layer.irreps_in.randn(N, -1)

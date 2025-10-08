@@ -9,6 +9,7 @@ from torch import nn
 from e3tools import scatter
 
 from ._gate import Gated
+from ._linear import Linear
 from ._interaction import LinearSelfInteraction
 from ._mlp import ScalarMLP
 from ._tensor_product import SeparableTensorProduct, DepthwiseTensorProduct
@@ -77,6 +78,8 @@ class FusedConv(nn.Module):
                 ```
             is used.
         """
+        if not openequivariance_available:
+            raise ImportError(f"OpenEquivariance could not be imported:\n{error_msg}")
 
         super().__init__()
 
@@ -101,20 +104,24 @@ class FusedConv(nn.Module):
 
         self.radial_nn = radial_nn(edge_attr_dim, self.tp.weight_numel)
 
-        if not openequivariance_available:
-            raise ImportError(f"OpenEquivariance could not be imported:\n{error_msg}")
+        if isinstance(self.tp, SeparableTensorProduct):
+            tp = self.tp.dtp
+            self.has_post_linear = True
+        else:
+            tp = self.tp
+            self.has_post_linear = False
 
-        # Remove path weight and path shape from instructions.
-        oeq_instructions = [instruction[:5] for instruction in self.tp.instructions]
+        # Remove path weight and path shape from instructions for OpenEquivariance.
+        oeq_instructions = [instruction[:5] for instruction in tp.instructions]
         oeq_tpp = oeq.TPProblem(
-            self.tp.irreps_in1,
-            self.tp.irreps_in2,
-            self.tp.irreps_out,
+            tp.irreps_in1,
+            tp.irreps_in2,
+            tp.irreps_out,
             oeq_instructions,
             shared_weights=False,
             internal_weights=False,
         )
-        self.fused_tp = oeq.TensorProductConv(
+        self.fused_tp_conv = oeq.TensorProductConv(
             oeq_tpp, torch_op=True, deterministic=False, use_opaque=False
         )
 
@@ -145,7 +152,10 @@ class FusedConv(nn.Module):
 
         src, dst = edge_index
         radial_attr = self.radial_nn(edge_attr)
-        messages_agg = self.fused_tp(node_attr, edge_sh, radial_attr, dst, src)
+        messages_agg = self.fused_tp_conv(node_attr, edge_sh, radial_attr, dst, src)
+        if self.has_post_linear:
+            messages_agg = self.tp.lin(messages_agg)
+
         num_neighbors = scatter(
             torch.ones_like(src), src, dim=0, dim_size=N, reduce="sum"
         )
@@ -287,9 +297,9 @@ class SeparableConv(Conv):
         )
 
 
-class FusedDepthwiseConv(FusedConv):
+class FusedSeparableConv(FusedConv):
     """
-    Equivariant convolution layer using separable tensor product
+    Equivariant convolution layer using separable tensor product, with fused OpenEquivariance kernels.
 
     ref: https://arxiv.org/abs/1802.08219
     ref: https://arxiv.org/abs/2206.11990
@@ -299,7 +309,7 @@ class FusedDepthwiseConv(FusedConv):
         super().__init__(
             *args,
             **kwargs,
-            tensor_product=DepthwiseTensorProduct,
+            tensor_product=SeparableTensorProduct,
         )
 
 
@@ -401,5 +411,22 @@ class SeparableConvBlock(ConvBlock):
         super().__init__(
             *args,
             **kwargs,
-            conv=SeparableConv,  # Explicitly set the convolution type to SeparableConv
+            conv=SeparableConv,
+        )
+
+
+class FusedSeparableConvBlock(ConvBlock):
+    """e3tools.nn.ConvBlock with FusedSeparableConv as the underlying convolution layer."""
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the SeparableConvBlock.
+
+        All arguments are passed directly to the parent ConvBlock,
+        with the 'conv' argument specifically set to SeparableConv.
+        """
+        super().__init__(
+            *args,
+            **kwargs,
+            conv=FusedSeparableConv,
         )
