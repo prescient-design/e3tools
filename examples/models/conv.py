@@ -22,7 +22,7 @@ class E3ConvNet(nn.Module):
         atom_type_embedding_dim: int,
         num_atom_types: int,
         max_radius: float,
-        conv_type: str = "default"
+        conv_type: str = "default",
     ):
         super().__init__()
 
