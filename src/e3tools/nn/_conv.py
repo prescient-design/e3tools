@@ -9,10 +9,9 @@ from torch import nn
 from e3tools import scatter
 
 from ._gate import Gated
-from ._linear import Linear
 from ._interaction import LinearSelfInteraction
 from ._mlp import ScalarMLP
-from ._tensor_product import SeparableTensorProduct, DepthwiseTensorProduct
+from ._tensor_product import SeparableTensorProduct
 
 try:
     import openequivariance as oeq

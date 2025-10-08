@@ -2,16 +2,12 @@ import functools
 
 import pytest
 import torch
-from torch import nn
 import e3nn
 
 from e3tools.nn import (
     Conv,
     FusedConv,
     DepthwiseTensorProduct,
-    ScalarMLP,
-    SeparableConv,
-    FusedSeparableConv,
     SeparableTensorProduct,
 )
 from e3tools import radius_graph
