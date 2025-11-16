@@ -3,7 +3,6 @@ from torch import nn
 import e3nn.o3
 
 
-
 class Repeat(nn.Module):
     """Repeat the irreps along the last axis."""
 
@@ -11,10 +10,8 @@ class Repeat(nn.Module):
         super().__init__()
         self.irreps_in = e3nn.o3.Irreps(irreps_in)
         self.repeats = repeats
-        self.irreps_out = e3nn.o3.Irreps(
-            [(mul * repeats, ir) for mul, ir in irreps_in]
-        )
-    
+        self.irreps_out = e3nn.o3.Irreps([(mul * repeats, ir) for mul, ir in irreps_in])
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Repeat the features along the last axis.
 
