@@ -13,14 +13,6 @@ from ._interaction import LinearSelfInteraction
 from ._mlp import ScalarMLP
 from ._tensor_product import SeparableTensorProduct
 
-try:
-    import openequivariance as oeq
-
-    openequivariance_available = True
-except ImportError as e:
-    error_msg = str(e)
-    openequivariance_available = False
-
 
 class FusedConv(nn.Module):
     """
@@ -77,8 +69,10 @@ class FusedConv(nn.Module):
                 ```
             is used.
         """
-        if not openequivariance_available:
-            raise ImportError(f"OpenEquivariance could not be imported:\n{error_msg}")
+        try:
+            import openequivariance as oeq
+        except ImportError as e:
+            raise ImportError(f"OpenEquivariance could not be imported: {e}")
 
         super().__init__()
 

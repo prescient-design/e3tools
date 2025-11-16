@@ -17,6 +17,7 @@ from ._tensor_product import SeparableTensorProduct, DepthwiseTensorProduct
 from ._transformer import Attention, MultiheadAttention, TransformerBlock
 from ._extract_irreps import ExtractIrreps
 from ._scaling import ScaleIrreps
+from ._repeat import Repeat
 
 __all__ = [
     "Attention",
@@ -37,6 +38,7 @@ __all__ = [
     "LinearSelfInteraction",
     "MulToAxis",
     "MultiheadAttention",
+    "Repeat",
     "ScalarMLP",
     "ScaleIrreps",
     "SeparableConv",
